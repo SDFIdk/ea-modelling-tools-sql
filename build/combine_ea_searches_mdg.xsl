@@ -30,10 +30,6 @@
                 <xsl:variable
                     name="collectionUri"
                     select="concat('file:///', replace($folderPath, '\\', '/'), '?select=*.xml')" />
-                <xsl:message>
-                    Collection URI:
-                    <xsl:value-of select="$collectionUri" />
-                </xsl:message>
                 <xsl:apply-templates select="collection($collectionUri)/RootSearch/Search">
                     <xsl:sort select="@Name" />
                 </xsl:apply-templates>
