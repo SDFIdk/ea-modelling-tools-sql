@@ -46,15 +46,16 @@ type matches the specified `DBNAME`. It can be used where a section of
 the SQL might require special handling depending upon the current 
 database type. This functionality can be used to add some text that will
  be not be executed by using a dummy name, e.g. `COMMENT`. This macro 
-must be used in the *end* of the query, not in the beginning.
+must be used in the **end** of the query, not in the beginning.
 
 ```sql
 select * from t_object;
 #DB=COMMENT# This is a comment #DB=COMMENT#
 ```
 
-See the section Create Search  Definitions in the EA user guide for more
-information.
+See the section
+[Create Search Definitions in the EA user guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&category=User+Guide+Latest&tab=1&search=1)
+for more information.
 
 ## Building
 
