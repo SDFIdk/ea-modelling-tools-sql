@@ -39,6 +39,29 @@ repositories, which are based on [SQLite](https://sqlite.org/).
 
 ## Writing new queries
 
+### Formatting
+
+The formatting of the queries is not important when running a search 
+from the "Find in Project" tab. However, the formatting is important
+when the queries are supposed to be reused in, for example, the 
+creation of search folders in the
+[Model Views tab](https://sparxsystems.com/search/sphider/search.php?query=%22model+views%22&catid=22&search=1&tab=1)
+or the
+[creation of model documents](https://sparxsystems.com/search/sphider/search.php?query=%22create+model+document%22&catid=22&search=1&tab=1).
+
+In those cases, the query must include the case sensitive phrase
+`ea_guid AS CLASSGUID` and the object type (using the alias `CLASSTYPE`).
+Therefore, the queries are formatted with upper case keywords.
+
+EA provides no functionality to format queries, this can be done with
+a dedicated database tool.
+
+See the section
+[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&catid=22&tab=1&search=1)
+for more information.
+
+### Writing comments
+
 EA allows the use of macros (`#xxx`) in the `WHERE` part of SQL queries,
  so that the same search can be used by different people in different 
 environments. The `#DB=<DBNAME>#` macro only uses the section of code 
