@@ -49,12 +49,58 @@ creation of search folders in the
 or the
 [creation of model documents](https://sparxsystems.com/search/sphider/search.php?query=%22create+model+document%22&catid=22&search=1&tab=1).
 
-In those cases, the query must include the case sensitive phrase
+In those cases, the query must include the **case sensitive** phrase
 `ea_guid AS CLASSGUID` and the object type (using the alias `CLASSTYPE`).
 Therefore, the queries are formatted with upper case keywords.
 
 EA provides no functionality to format queries, this can be done with
 a dedicated database tool.
+
+### Column CLASSGUID
+
+The query must include the phrase `ea_guid AS CLASSGUID` so that you can
+  right-click on the results and, for example, have access to finding 
+the model element in the Project Browser.
+
+`CLASSGUID` is not shown as a column in the results.
+
+See the section
+[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&catid=22&tab=1&search=1)
+for more information.
+
+### Column CLASSTYPE
+
+The query must include the phrase `<classtype> AS CLASSTYPE` so that an 
+icon can be displayed for the model element. Possible values for 
+`<classtype>` are shown in the table below.
+
+| Table | CLASSTYPE | Icon | Comment |
+|---|---|---|---|
+| t_package | 'Package' | ![package](http://demo.sparxpublic.com/images/element64/package.png "package") |  |
+| t_object | t_object.object_type | Depends on `object_type`:<br />![class](http://demo.sparxpublic.com/images/element64/class.png "class")<br />![data type](http://demo.sparxpublic.com/images/element64/datatype.png "data type")<br />![enumeration](http://demo.sparxpublic.com/images/element64/enumeration.png "enumeration")<br />…|  |
+| t_attribute | 'Attribute' | ![attribute](http://demo.sparxpublic.com/images/element64/attribute.png) |  |
+| t_connector | t_connector.connector_type | Depends on `connector_type`:<br />![association](http://demo.sparxpublic.com/images/element64/association.png "association")<br />![generalization](http://demo.sparxpublic.com/images/element64/generalization.png "generalization")<br />![aggregation](http://demo.sparxpublic.com/images/element64/aggregation.png "aggregation or composition")<br />… | Connector ends are not stand-alone objects in EA. Use `t_connector.connector_type` when the focus is on the connector itself. |
+| t_connector | 'AssociationEnd' | ![association end](http://demo.sparxpublic.com/images/element64/associationend.png "association end") | Connector ends are not stand-alone objects in EA. Use `AssociationEnd` when the connector is an association (including aggregations and compositions) and when the focus is on the association end. |
+| t_diagram | t_diagram.diagram_type | ![diagram](http://demo.sparxpublic.com/images/element64/diagram.png "diagram") |  |
+
+`CLASSTYPE` is not shown as a column in the results.
+
+See the section
+[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&catid=22&tab=1&search=1)
+for more information.
+
+### Column CLASSTABLE
+
+In queries for connectors and diagrams, the phrase 
+`<classtable> AS CLASSTABLE` must be included in order for the right 
+icon to be displayed.
+
+| Table | CLASSTABLE |
+|---|---|
+| t_connector | 't_connector' |
+| t_diagram | 't_diagram' |
+
+`CLASSTABLE` is not shown as a column in the results.
 
 See the section
 [Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&catid=22&tab=1&search=1)
@@ -70,10 +116,15 @@ type matches the specified `DBNAME`. It can be used where a section of
 the SQL might require special handling depending upon the current 
 database type. This functionality can be used to add some text that will
  be not be executed by using a dummy name, e.g. `COMMENT`. This macro 
-must be used in the <em>end</em> of the query, not in the beginning.
+must be used in the **end** of the query, not in the beginning.
 
 ```sql
-select * from t_object;
+SELECT
+    o.ea_guid AS CLASSGUID,
+    o.object_type AS CLASSTYPE,
+    o.*
+FROM
+    t_object o;
 #DB=COMMENT# This is a comment #DB=COMMENT#
 ```
 
