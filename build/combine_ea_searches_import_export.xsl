@@ -11,14 +11,16 @@
     
     <!-- Define a parameter for the folder path -->
     <xsl:param name="folderPath" />
+    
+    <!-- Construct the URI that identifies all the files that contain searches -->
+    <xsl:variable
+        name="searchCollectionUri"
+        select="concat('file:///', replace($folderPath, '\\', '/'), '/modelsearches?select=*.xml')" />
 
     <!-- Start template: read a set of files containing EA searches -->
     <xsl:template name="start-template">
         <RootSearch>
-            <xsl:variable
-                name="collectionUri"
-                select="concat('file:///', replace($folderPath, '\\', '/'), '?select=*.xml')" />
-            <xsl:apply-templates select="collection($collectionUri)/RootSearch/Search">
+            <xsl:apply-templates select="collection($searchCollectionUri)/RootSearch/Search">
                 <xsl:sort select="@Name"/>
             </xsl:apply-templates>
         </RootSearch>
