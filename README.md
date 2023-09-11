@@ -190,12 +190,16 @@ search folders are exported together in one file.
 
 ## Building
 
+It is a prerequisite that [Saxon](https://www.saxonica.com) is installed
+ and that the environment variable `SAXON_CP` points to the location of 
+the main Saxon jar file.
+
 Run the [Powershell](https://learn.microsoft.com/en-us/powershell/) 
 scripts from directory `ea-modelling-tools-sql`, not from directory 
 `build`.
 
 ```PowerShell
-.\build\build.ps1 -saxonJar:"C:\path\to\saxon-he-x.y.jar" -mdgVersion:a.b.c
+.\build\build.ps1 -mdgVersion:a.b.c
 ```
 
 The scripts are combined into four files:
