@@ -19,10 +19,9 @@ search category "EA Modelling Tools SQL" in the Find in Project window
 and makes the model views available in the root-node "EA Modelling Tools
  SQL Views" in the Model Views window. With this option, the model 
 searches and model views are not editable. Therefore, import the MDG if 
-you only want to use the searches and views. See the 
-[EA User Guide for how to import an MDG Technology](https://sparxsystems.com/search/sphider/search.php?query=%22import+mdg+technologies%22&category=User%20Guide%20Latest&search=1&tab=1).
-
-<!-- category=User%20Guide%20Latest shows results for the latest EA User Guide -->
+you only want to use the searches and views. See the EA User Guide for 
+how to 
+[import an MDG Technology](https://sparxsystems.com/eahelp/importmdgtechnologies.html).
 
 The second option is to import the searches (ea_search.xml) and the 
 views (ea_modelviews.xml) so they appear in search category "My 
@@ -30,9 +29,9 @@ Searches" in the Find in Project window and under "EA Modelling Tools
 SQL Views" in the Model Views window, respectively. With this option, 
 the searches and views are editable. This option is applicable if you 
 want to modify  the searches and views and update them in this 
-repository. See the EA User Guide for how to
-[searches](https://sparxsystems.com/search/sphider/search.php?query=%22model%20search%22&category=User%20Guide%20Latest&search=1&tab=1)
-and how to import [model views](https://www.sparxsystems.com/search/sphider/search.php?query=%22model%20views%22%20focus&type=and&category=User%20Guide%20Latest&tab=1&search=1)..
+repository. See the EA User Guide for how to import
+[model searches](https://sparxsystems.com/eahelp/search_view.html)
+and how to import [model views](https://sparxsystems.com/eahelp/model_views.html).
 
 ## Usage
 
@@ -45,11 +44,14 @@ Sparx Systems has published a video about model searches, watch it
 [here](https://sparxsystems.com/resources/show-video.html?video=gettingstarted-modelsearchbasics).
 
 The model searches in this repository are searches that are not based on
- the Query Builder, but on the SQL Editor. See the [section Model Search in
- the EA User Guide](https://sparxsystems.com/search/sphider/search.php?query=%22model%20search%22&category=User%20Guide%20Latest&search=1&tab=1).
+ the Query Builder, but on the SQL Editor.
  
 The queries in this repository have been tested with .qea file 
 repositories, which are based on [SQLite](https://sqlite.org/).
+
+See also the section on
+[Model Search](https://sparxsystems.com/eahelp/search_view.html)
+in the EA User Guide.
 
 ### Model views
 
@@ -79,8 +81,9 @@ ends and that matches the associations ends to the classifiers they are
 view based on model search 
 `classifiers_with_navigable_association_ends_without_explicit_multiplicity`.
 
-See the 
-[section Model Views in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22model%20views%22%20focus&type=and&category=User%20Guide%20Latest&tab=1&search=1).
+See also the section on
+[Model Views](https://sparxsystems.com/eahelp/model_views.html)
+in the EA User Guide.
 
 ## Writing new queries
 
@@ -89,10 +92,8 @@ See the
 The formatting of the queries is not important when running a search 
 from the "Find in Project" tab. However, the formatting is important
 when the queries are supposed to be reused in, for example, the 
-creation of search folders in the
-[Model Views tab](https://www.sparxsystems.com/search/sphider/search.php?query=%22model%20views%22%20focus&type=and&category=User%20Guide%20Latest&tab=1&search=1)
-or the
-[creation of model documents](https://sparxsystems.com/search/sphider/search.php?query=%22create+model+document%22&category=User%20Guide%20Latest&search=1&tab=1).
+creation of search folders in the Model Views tab or the
+[creation of model documents](https://sparxsystems.com/eahelp/createadocumentobject.html).
 
 In those cases, the query must include the **case sensitive** phrase
 `ea_guid AS CLASSGUID` and the object type (using the alias `CLASSTYPE`).
@@ -110,8 +111,8 @@ the model element in the Project Browser.
 `CLASSGUID` is not shown as a column in the results.
 
 See the section
-[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&category=User%20Guide%20Latest&tab=1&search=1)
-for more information.
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
 
 ### Column CLASSTYPE
 
@@ -131,8 +132,8 @@ icon can be displayed for the model element. Possible values for
 `CLASSTYPE` is not shown as a column in the results.
 
 See the section
-[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&category=User%20Guide%20Latest&tab=1&search=1)
-for more information.
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
 
 ### Column CLASSTABLE
 
@@ -148,8 +149,8 @@ icon to be displayed.
 `CLASSTABLE` is not shown as a column in the results.
 
 See the section
-[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&category=User%20Guide%20Latest&tab=1&search=1)
-for more information.
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
 
 ### Writing comments
 
@@ -174,8 +175,8 @@ FROM
 ```
 
 See the section
-[Create Search Definitions in the EA User Guide](https://www.sparxsystems.com/search/sphider/search.php?query=%22Create+Search+Definitions%22&category=User%20Guide%20Latest&tab=1&search=1)
-for more information.
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
 
 ### Exporting queries
 
@@ -190,12 +191,16 @@ search folders are exported together in one file.
 
 ## Building
 
+It is a prerequisite that [Saxon](https://www.saxonica.com) is installed
+ and that the environment variable `SAXON_CP` points to the location of 
+the main Saxon jar file.
+
 Run the [Powershell](https://learn.microsoft.com/en-us/powershell/) 
 scripts from directory `ea-modelling-tools-sql`, not from directory 
 `build`.
 
 ```PowerShell
-.\build\build.ps1 -saxonJar:"C:\path\to\saxon-he-x.y.jar" -mdgVersion:a.b.c
+.\build\build.ps1 -mdgVersion:a.b.c
 ```
 
 The scripts are combined into four files:
