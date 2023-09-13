@@ -131,6 +131,9 @@ icon can be displayed for the model element. Possible values for
 
 `CLASSTYPE` is not shown as a column in the results.
 
+EA does not distinguish between attributes and enumeration literals with
+ regard to the symbol.
+
 See the section
 [Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
 in the EA User Guide for more information.
@@ -188,6 +191,11 @@ has to be saved in a separate file, to make it easier to track changes.
 The search folders are maintained in EA, in Model View root node "EA 
 Modelling Tools SQL", and exported using the built-in functionality. The 
 search folders are exported together in one file.
+
+File modelviews.xml should be formatted before it is committed, to make 
+it easier to see changes between commits. Use e.g. the Pretty Print 
+option from the XML Tools plugin in Notepad++. The file in the 
+repository is formatted with a tab size of 4 and spaces instead of tabs.
 
 ## Building
 
