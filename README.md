@@ -131,6 +131,9 @@ icon can be displayed for the model element. Possible values for
 
 `CLASSTYPE` is not shown as a column in the results.
 
+EA does not distinguish between attributes and enumeration literals with
+ regard to the symbol.
+
 See the section
 [Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
 in the EA User Guide for more information.
