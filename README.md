@@ -192,6 +192,11 @@ The search folders are maintained in EA, in Model View root node "EA
 Modelling Tools SQL", and exported using the built-in functionality. The 
 search folders are exported together in one file.
 
+File modelviews.xml should be formatted before it is committed, to make 
+it easier to see changes between commits. Use e.g. the Pretty Print 
+option from the XML Tools plugin in Notepad++. The file in the 
+repository is formatted with a tab size of 4 and spaces instead of tabs.
+
 ## Building
 
 It is a prerequisite that [Saxon](https://www.saxonica.com) is installed
