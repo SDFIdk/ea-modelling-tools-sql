@@ -31,6 +31,7 @@
         <Category NType="7" Name="Naming rules" ID="{00856B2C-3272-490a-AD1D-6E9C46C96960}" Pos="0">
             <Search SrchID="{A2BF12A6-EC3A-4f64-91BB-28F54ABFAAC6}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers with association ends with invalid names (internal rules)" ID="{79EFC373-4F02-40b6-8D05-36BB19690B06}" Pos="0"/>
             <Search SrchID="{3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers, attributes and enumeration literal with invalid names (internal rules)" ID="{52A68E56-DC0A-4eeb-BCD4-59DBCD1E5C93}" Pos="0"/>
+            <Search SrchID="{EF59B26F-9FB2-4148-92CE-A8C6007C2894}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="enumeration literals with names with two consecutive spaces" ID="{6D457226-066F-46eb-B0C3-8966B9B2E5C9}" Pos="0"/>
         </Category>
     </RootView>
 </Views>
