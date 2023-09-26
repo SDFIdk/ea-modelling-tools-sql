@@ -181,6 +181,39 @@ See the section
 [Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
 in the EA User Guide for more information.
 
+### Queries with common table expressions
+
+EA expects a query to start with `SELECT`. Nest a query using a
+[common table expression](https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL#Common_table_expression)
+in a simple query to get around this:
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH RECURSIVE self_and_ancestors AS (
+	SELECT
+		*
+	FROM
+		t_package
+	WHERE
+		t_package.package_id = #Package#
+UNION ALL
+	SELECT
+		p.*
+	FROM
+		t_package AS p,
+		self_and_ancestors AS s
+	WHERE
+		p.package_id = s.parent_id
+)
+	SELECT
+		name
+	FROM
+		self_and_ancestors);;
+```
+
 ### Exporting queries
 
 The queries are exported using the built-in functionality. Each query 
