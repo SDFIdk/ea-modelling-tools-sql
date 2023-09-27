@@ -23,6 +23,7 @@
             <Search SrchID="{2FFC9447-4996-4b4d-BCE5-F09A9A619733}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with diagram details" ID="{724861EB-8BE1-4791-A75C-0E325B161F21}" Pos="0"/>
             <Search SrchID="{B4D415F5-5EA1-4a48-BDC3-72A51B1380F9}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with diagram notes" ID="{D90DD86E-A8B3-4084-9C11-8861FF1D553A}" Pos="0"/>
             <Search SrchID="{9BE287B7-E2E0-4db1-ADA0-6FA591597ED6}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (Danish)" ID="{EB809CA6-0388-4d8e-A5AD-839C47A01A0A}" Pos="0"/>
+            <Search SrchID="{E8B2F87E-BE46-44a9-906B-4AC533900454}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="model without dependency diagram (Danish)" ID="{1EDDC640-173C-4e69-8AE6-CC187BBE50C7}" Pos="0"/>
             <Search SrchID="{5372E6FF-5968-40a5-945D-FC1BAC3EDAEF}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="objects not on any diagram" ID="{831DD6C0-1524-49b9-A023-E440A36817CC}" Pos="0"/>
         </Category>
         <Category NType="7" Name="Documentation rules" ID="{0CF9FD84-3D6A-4f51-8B78-2DEFC341E073}" Pos="0">
