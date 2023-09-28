@@ -219,16 +219,44 @@ UNION ALL
 The queries are exported using the built-in functionality. Each query 
 has to be saved in a separate file, to make it easier to track changes.
 
-## Creating new model views
+## Creating new search folders
 
 The search folders are maintained in EA, in Model View root node "EA 
-Modelling Tools SQL", and exported using the built-in functionality. The 
-search folders are exported together in one file.
+Modelling Tools SQL".
 
-File modelviews.xml should be formatted before it is committed, to make 
+Make sure that the GUID of Model View root node "EA Modelling Tools SQL"
+ is the same as the GUID in this repository before exporting the model 
+views. EA changes the GUID of that node upon import (the other GUIDs are
+ kept). The GUIDs can be updated with a dedicated SQLite tool using the 
+following queries. Close your EA project before executing the queries.
+
+```sql
+SELECT xrefid FROM t_xrefsystem WHERE name = 'EA Modelling Tools SQL';
+UPDATE t_xrefsystem SET xrefid = '{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}' WHERE xrefid = 'replace_with_xref_id_from_first_query';
+UPDATE t_xrefsystem SET supplier = '{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}' WHERE supplier = 'replace_with_xref_id_from_first_query';
+```
+
+The search folders are exported using the
+[built-in functionality](https://sparxsystems.com/eahelp/model_views.html).
+The search folders are exported together in one file.
+
+File modelviews.xml has to be formatted before it is committed, to make 
 it easier to see changes between commits. Use e.g. the Pretty Print 
 option from the XML Tools plugin in Notepad++. The file in the 
 repository is formatted with a tab size of 4 and spaces instead of tabs.
+
+If the model views need to be reorganised (e.g. moved to a different
+category):
+
+1. Export the latest version you have in EA
+2. Format the resulting XML file (see above)
+3. Reorganise the model views in the XML file
+4. Delete the EA Modelling Tools SQL model views from EA
+5. Import the model views in the reorganised XML file
+
+The GUIDs of the model view (`<RootView>`), views folders (`<Category>`) 
+and search folders (`<Search>`) are kept by following the procedures 
+above. Keeping the GUIDs improves the traceability of changes.
 
 ## Building
 
