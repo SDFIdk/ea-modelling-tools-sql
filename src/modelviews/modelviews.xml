@@ -29,11 +29,13 @@
         </Category>
         <Category NType="7" Name="SDFI Diagram rules for models in Danish" ID="{33E258A9-AB30-4f2a-A736-794F6A6B44C6}" Pos="0">
             <Search SrchID="{4EFB024C-EA07-4c8a-A68F-EC1FFB18764A}" SrchTerm="Kontekstdiagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classes without context diagrams (Danish)" ID="{5698677E-C6AD-42e4-8AC7-DADC9762A422}" Pos="0"/>
+            <Search SrchID="{9C568A9A-771B-45b8-957C-BC016455F994}" SrchTerm="Kontekstdiagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="context diagrams without central classifier (Danish)" ID="{1F1D161B-BC00-4ad3-B55D-251709E4D412}" Pos="0"/>
             <Search SrchID="{9BE287B7-E2E0-4db1-ADA0-6FA591597ED6}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (Danish)" ID="{EB809CA6-0388-4d8e-A5AD-839C47A01A0A}" Pos="0"/>
             <Search SrchID="{E8B2F87E-BE46-44a9-906B-4AC533900454}" SrchTerm="Pakkeafhængigheder" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="model without dependency diagram (Danish)" ID="{1EDDC640-173C-4e69-8AE6-CC187BBE50C7}" Pos="0"/>
         </Category>
         <Category NType="7" Name="SDFI Diagram rules for models in English" ID="{527BC9C7-4EB1-4cc5-A267-AAE494D306EF}" Pos="0">
             <Search SrchID="{4EFB024C-EA07-4c8a-A68F-EC1FFB18764A}" SrchTerm="Context diagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classes without context diagrams (English)" ID="{3DED1BED-12EB-4521-A725-037BA80C6652}" Pos="0"/>
+            <Search SrchID="{9C568A9A-771B-45b8-957C-BC016455F994}" SrchTerm="Context diagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="context diagrams without central classifier (English)" ID="{E24ACD56-AF66-4f17-AA9D-4CC9A854804F}" Pos="0"/>
             <Search SrchID="{CE1FB2AF-49E3-4402-A446-844A105B6ADB}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (English)" ID="{930D9D7B-6E46-41e8-9883-9A0A8F4C775E}" Pos="0"/>
             <Search SrchID="{E8B2F87E-BE46-44a9-906B-4AC533900454}" SrchTerm="Package dependencies" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="model without dependency diagram (English)" ID="{AD8C7020-300B-4f2b-8A00-3EB69FBFA6DE}" Pos="0"/>
         </Category>
