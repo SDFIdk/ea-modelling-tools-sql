@@ -7,7 +7,7 @@ been exported individually using Enterprise Architect (EA). This makes
 it easier to version control them and collaborate with others to further
 develop the query collection.
 
-In addition, this repository contains a set of model views that are 
+In addition, this repository contains a set of search views that are 
 based on the searches, for easier identification of certain model 
 elements.
 
@@ -16,10 +16,10 @@ elements.
 The first option is to import the EA Modelling Tools SQL MDG Technology 
 (mdg_eamt_sql.xml). Import makes the model searches available in the 
 search category "EA Modelling Tools SQL" in the Find in Project window 
-and makes the model views available in the root-node "EA Modelling Tools
- SQL Views" in the Model Views window. With this option, the model 
-searches and model views are not editable. Therefore, import the MDG if 
-you only want to use the searches and views. See the EA User Guide for 
+and makes the search views available under the root-node "EA Modelling 
+Tools  SQL Views" in the Model Views window. With this option, the model
+ searches and model views are not editable. Therefore, import the MDG if
+ you only want to use the searches and views. See the EA User Guide for 
 how to 
 [import an MDG Technology](https://sparxsystems.com/eahelp/importmdgtechnologies.html).
 
@@ -53,12 +53,12 @@ See also the section on
 [Model Search](https://sparxsystems.com/eahelp/search_view.html)
 in the EA User Guide.
 
-### Model views
+### Search views
 
 Access the model view functionality by going to
 Start > All Windows > Design > Explore > Focus > Model Views.
 
-The model views in this repository contain search views that are based 
+The model views in this repository are search views that are based 
 on the model searches in this repository. They are organized in view 
 folders. Each view folder organizes a set of model searches that return 
 elements that are not in accordance with a certain set of modelling 
@@ -92,7 +92,7 @@ in the EA User Guide.
 The formatting of the queries is not important when running a search 
 from the "Find in Project" tab. However, the formatting is important
 when the queries are supposed to be reused in, for example, the 
-creation of search folders in the Model Views tab or the
+creation of search views in the Model Views tab or the
 [creation of model documents](https://sparxsystems.com/eahelp/createadocumentobject.html).
 
 In those cases, the query must include the **case sensitive** phrase
@@ -181,21 +181,82 @@ See the section
 [Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
 in the EA User Guide for more information.
 
+### Queries with common table expressions
+
+EA expects a query to start with `SELECT`. Nest a query using a
+[common table expression](https://en.wikipedia.org/wiki/Hierarchical_and_recursive_queries_in_SQL#Common_table_expression)
+in a simple query to get around this:
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH RECURSIVE self_and_ancestors AS (
+	SELECT
+		*
+	FROM
+		t_package
+	WHERE
+		t_package.package_id = #Package#
+UNION ALL
+	SELECT
+		p.*
+	FROM
+		t_package AS p,
+		self_and_ancestors AS s
+	WHERE
+		p.package_id = s.parent_id
+)
+	SELECT
+		name
+	FROM
+		self_and_ancestors);;
+```
+
 ### Exporting queries
 
 The queries are exported using the built-in functionality. Each query 
 has to be saved in a separate file, to make it easier to track changes.
 
-## Creating new model views
+## Creating new search views
 
-The search folders are maintained in EA, in Model View root node "EA 
-Modelling Tools SQL", and exported using the built-in functionality. The 
-search folders are exported together in one file.
+The search views are maintained in EA, in Model View root node "EA 
+Modelling Tools SQL".
 
-File modelviews.xml should be formatted before it is committed, to make 
+Make sure that the GUID of Model View root node "EA Modelling Tools SQL"
+ is the same as the GUID in this repository before exporting the model 
+views. EA changes the GUID of that node upon import (the other GUIDs are
+ kept). The GUIDs can be updated with a dedicated SQLite tool using the 
+following queries. Close your EA project before executing the queries.
+
+```sql
+SELECT xrefid FROM t_xrefsystem WHERE name = 'EA Modelling Tools SQL';
+UPDATE t_xrefsystem SET xrefid = '{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}' WHERE xrefid = 'replace_with_xref_id_from_first_query';
+UPDATE t_xrefsystem SET supplier = '{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}' WHERE supplier = 'replace_with_xref_id_from_first_query';
+```
+
+The search views are exported using the
+[built-in functionality](https://sparxsystems.com/eahelp/model_views.html).
+The search views are exported together in one file.
+
+File modelviews.xml has to be formatted before it is committed, to make 
 it easier to see changes between commits. Use e.g. the Pretty Print 
 option from the XML Tools plugin in Notepad++. The file in the 
 repository is formatted with a tab size of 4 and spaces instead of tabs.
+
+If the search views need to be reorganised (e.g. moved to a different
+category):
+
+1. Export the latest version you have in EA
+2. Format the resulting XML file (see above)
+3. Reorganise the search views in the XML file
+4. Delete the EA Modelling Tools SQL model views from EA
+5. Import the search views in the reorganised XML file
+
+The GUIDs of the root node (`<RootView>`), views folders (`<Category>`) 
+and search views (`<Search>`) are kept by following the procedures 
+above. Keeping the GUIDs improves the traceability of changes.
 
 ## Building
 
@@ -217,6 +278,6 @@ The scripts are combined into four files:
 2. a file containing the searches, following the same structure as in 
 searches exported from EA and as in C:\Users\<username>\AppData\Roaming\Sparx Systems\EA\Search Data\EA_Search.xml
 (ea_search.xml);
-3. a file containing the model views (ea_modelviews.xml), a simple copy of the model views file in the source code;
+3. a file containing the search views (ea_modelviews.xml), a simple copy of the search views file in the source code;
 4. an HTML file listing all the searches and their comments 
 (ea_search_doc.xhtml).
