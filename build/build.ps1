@@ -24,14 +24,14 @@ Write-Host "INFO Building MDG"
 $currentDirectory = Get-Location
 $mdgFileName = "mdg_eamt_sql.xml"
 $searchesFileName = "ea_search.xml"
-$viewFileName = "ea_modelviews.xml"
+$viewsFileName = "ea_modelviews.xml"
 java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\combine_ea_searches_mdg.xsl -it:"start-template" -o:target\$mdgFileName folderPath=$currentDirectory\src version=$mdgVersion
 Write-Host "INFO Building (editable) searches"
 java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\combine_ea_searches_import_export.xsl -it:"start-template" -o:target\$searchesFileName folderPath=$currentDirectory\src
 Write-Host "INFO Copying (editable) model views"
-Copy-Item $currentDirectory\src\modelviews\modelviews.xml -Destination $currentDirectory\target\$viewFileName
+Copy-Item $currentDirectory\src\modelviews\modelviews.xml -Destination $currentDirectory\target\$viewsFileName
 (Get-Item $currentDirectory\target\ea_modelviews.xml).LastWriteTime = (Get-Date)
 (Get-Item $currentDirectory\target\ea_modelviews.xml).CreationTime = (Get-Date)
 Write-Host "INFO Building documentation"
-java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\create_mdg_documentation.xsl -s:target\$mdgFileName -it:"start-template" -o:target\ea_search_doc.xhtml folderPath=$currentDirectory\src mdgFileName=$mdgFileName searchesFileName=$searchesFileName
+java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\create_mdg_documentation.xsl -s:target\$mdgFileName -it:"start-template" -o:target\ea_search_doc.xhtml folderPath=$currentDirectory\src mdgFileName=$mdgFileName searchesFileName=$searchesFileName viewsFileName=$viewsFileName
 Write-Host "INFO Finished"
