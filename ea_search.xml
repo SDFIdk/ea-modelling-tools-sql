@@ -1,0 +1,787 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RootSearch>
+   <Search Name="all_attributes_classifier"
+           GUID="{71E5285F-E21B-4b05-BFC2-8C4A1EDD92BD}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;WITH self_and_ancestor(object_id,&#xA;&#x9;name,&#xA;&#x9;level) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.object_id,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;1&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.object_id = #CurrentElementID#&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_parent.object_id,&#xA;&#x9;&#x9;o_parent.name,&#xA;&#x9;&#x9;s.level * 2&#xA;&#x9;FROM&#xA;&#x9;&#x9;(self_and_ancestor s&#xA;&#x9;INNER JOIN t_connector c ON&#xA;&#x9;&#x9;(s.object_id = c.start_object_id&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Generalization'))&#xA;&#x9;INNER JOIN t_object o_parent ON&#xA;&#x9;&#x9;c.end_object_id = o_parent.object_id&#xA;),&#xA;&#x9;attributes_self_and_ancestor(CLASSGUID,&#xA;&#x9;CLASSTYPE,&#xA;&#x9;property_name,&#xA;&#x9;defining_classifier_object_id,&#xA;&#x9;defining_classifier_name,&#xA;&#x9;level) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;o.object_id,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;o.level&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_attribute a&#xA;&#x9;INNER JOIN&#xA;&#x9;self_and_ancestor o&#xA;ON&#xA;&#x9;&#x9;a.object_id = o.object_id&#xA;&#x9;)&#xA;&#x9;SELECT&#xA;&#x9;&#x9;CLASSGUID,&#xA;&#x9;&#x9;CLASSTYPE,&#xA;&#x9;&#x9;property_name,&#xA;&#x9;&#x9;defining_classifier_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;attributes_self_and_ancestor&#xA;&#x9;ORDER BY&#xA;&#x9;&#x9;LEVEL DESC&#xA;);&#xA;#DB=COMMENT# Find the owned and inherited attributes of the classifier selected in the Project Browser. Association ends are not taken into account. Note: the query contains &#34;level * 2&#34; instead of the usual &#34;level + 1&#34;. This is because there is a bug in EA that causes numeric addition not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="associations"
+           GUID="{AF887E0E-D7C7-4258-89E8-77705B195658}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;c.connector_type AS CLASSTYPE,&#xA;&#x9;'t_connector' AS CLASSTABLE,&#xA;&#x9;c.name,&#xA;&#x9;c.direction,&#xA;&#x9;o_src.name as source_name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;c.sourcecard,&#xA;&#x9;c.sourcestereotype,&#xA;&#x9;o_target.name as target_name,&#xA;&#x9;c.destrole,&#xA;&#x9;c.destcard,&#xA;&#x9;c.deststereotype&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_src ON&#xA;&#x9;c.start_object_id = o_src.object_id)&#xA;INNER JOIN t_object o_target ON&#xA;&#x9;c.end_object_id = o_target.object_id&#xA;WHERE&#xA;&#x9;((o_src.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_target.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_src.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_target.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;ORDER BY&#xA;&#x9;c.name;&#xA;#DB=COMMENT# Find all associations in the selected package and its subpackages. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="associations_unspecified_direction"
+           GUID="{29C77169-F460-4a6f-ABF6-4301C00A9114}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;c.connector_type AS CLASSTYPE,&#xA;&#x9;'t_connector' AS CLASSTABLE,&#xA;&#x9;c.name,&#xA;&#x9;c.direction,&#xA;&#x9;o_src.name as source_name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_target.name as target_name,&#xA;&#x9;c.destrole&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_src ON&#xA;&#x9;c.start_object_id = o_src.object_id)&#xA;INNER JOIN t_object o_target ON&#xA;&#x9;c.end_object_id = o_target.object_id&#xA;WHERE&#xA;&#x9;((o_src.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_target.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_src.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_target.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.Direction = 'Unspecified'&#xA;ORDER BY&#xA;&#x9;c.name;&#xA;#DB=COMMENT# Find the associations that have an unspecified direction. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_of_enumerations"
+           GUID="{D62774DC-423F-47fe-9DCF-27A4D0010C6C}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS enumeration_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.styleex&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type = 'Enumeration'&#xA;&#x9;AND instr(a.styleex, 'IsLiteral=1') = 0;&#xA;#DB=COMMENT# Find the attributes that belong to enumerations. Typically, enumerations only have enumeration literals, not attributes. In EA, attributes and enumerations are stored in table t_attribute. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_with_conflicting_type"
+           GUID="{E66A6DD7-0140-4105-876D-7527306A28B1}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id&#xA;FROM&#xA;&#x9;(((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id))&#xA;INNER JOIN t_object o2 ON&#xA;&#x9;o2.object_id = a.classifier&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;&#x9;AND (a.classifier IS NOT NULL&#xA;&#x9;&#x9;AND a.type != o2.name)&#xA;ORDER BY&#xA;&#x9;p.name,&#xA;&#x9;o.name;&#xA;#DB=COMMENT# Find the attributes that have a conflicting type, where the name of the attribute type is not equal to the name of the classifier that is specified as the type. This can for example happen when first a classifier was chosen as type in the dropdown, and then &lt;none&gt; was chosen as type in the drop-down. To resolve this, change the type to a data type defined by the language of the element (in the dropdown) and then change again to &lt;none&gt;. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_with_name_like"
+           GUID="{157E9A64-26FE-40c4-A796-D941F1CE9E61}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id&#xA;FROM&#xA;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND a.name LIKE '&lt;Search Term&gt;'&#xA;ORDER BY&#xA;&#x9;a.name;&#xA;#DB=COMMENT# Finds all the attributes with a name like the specified search term. Specify a search term using the syntax for the LIKE operator as defined by the underlying database system. E.g. for SQLite: % matches any sequence of zero or more characters in the string, _ matches any single character in the string. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_with_type_like"
+           GUID="{E74601A1-84F4-434d-A07F-9A552EB328C5}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id&#xA;FROM&#xA;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND a.type LIKE '&lt;Search Term&gt;'&#xA;ORDER BY&#xA;&#x9;a.type;&#xA;#DB=COMMENT# Specify a search term using the syntax for the LIKE operator as defined by the underlying database system. E.g. for SQLite: % matches any sequence of zero or more characters in the string, _ matches any single character in the string. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_with_type_without_classifier"
+           GUID="{2131CFDC-3A6F-45c7-9A64-A8AF75664700}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;&#x9;AND (a.classifier IS NULL&#xA;&#x9;&#x9;OR a.classifier = 0)&#xA;&#x9;AND a.type IS NOT NULL&#xA;ORDER BY&#xA;&#x9;p.name,&#xA;&#x9;o.name;&#xA;#DB=COMMENT# Find the attributes that have a type specified that is not linked to an element (classifier) in the model. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="attributes_without_type"
+           GUID="{C99541B0-D29E-4d7a-8C9A-73002BDA92D1}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;&#x9;AND a.classifier = 0&#xA;&#x9;AND a.type IS NULL&#xA;ORDER BY&#xA;&#x9;p.name,&#xA;&#x9;o.name;&#xA;#DB=COMMENT# Find the attributes that have no type specified (&lt;none&gt; was chosen as type in the drop-down). #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classes_without_context_diagram"
+           GUID="{4EFB024C-EA07-4c8a-A68F-EC1FFB18764A}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;o.name&#xA;FROM&#xA;&#x9;t_object o&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND object_type = 'Class'&#xA;&#x9;AND NOT EXISTS&#xA;(select * from t_diagramobjects do inner join t_diagram d on do.diagram_id = d.diagram_id&#xA;where d.name = #Concat '&lt;Search Term&gt; ', o.name#);&#xA;#DB=COMMENT# Find the classes that don't have a context diagram. A context diagram must be a class diagram and it must have a name consisting of (1) the term specified as search term (e.g. &#34;Context diagram&#34; or &#34;Kontekstdiagram&#34;) (2) a space and (3) the name of the class. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifier_and_ancestors"
+           GUID="{F75628D7-C615-4593-8E14-998BA91C0F11}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;CLASSGUID,&#xA;&#x9;CLASSTYPE,&#xA;&#x9;name&#xA;FROM&#xA;&#x9;(&#xA;WITH self_and_ancestor(CLASSGUID,&#xA;&#x9;CLASSTYPE,&#xA;&#x9;object_id,&#xA;&#x9;name) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.ea_guid,&#xA;&#x9;&#x9;o.object_type,&#xA;&#x9;&#x9;o.object_id,&#xA;&#x9;&#x9;o.name&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.ea_guid = #CurrentElementGUID#&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_parent.ea_guid,&#xA;&#x9;&#x9;o_parent.object_type,&#xA;&#x9;&#x9;o_parent.object_id,&#xA;&#x9;&#x9;o_parent.name&#xA;&#x9;FROM&#xA;&#x9;&#x9;(self_and_ancestor s&#xA;&#x9;INNER JOIN t_connector c ON&#xA;&#x9;&#x9;(s.object_id = c.start_object_id&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Generalization'))&#xA;&#x9;INNER JOIN t_object o_parent ON&#xA;&#x9;&#x9;c.end_object_id = o_parent.object_id&#xA;)&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;self_and_ancestor&#xA;);&#xA;#DB=COMMENT# Find (1) the classifier selected in the Project Browser and (2) the ancestors of that classifier. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_association_ends_with_invalid_names_internal"
+           GUID="{A2BF12A6-EC3A-4f64-91BB-28F54ABFAAC6}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;&#x9;o_start.name AS classifier_name,&#xA;&#x9;&#x9;c.destrole AS property_name,&#xA;&#x9;&#x9;o_end.name AS type,&#xA;&#x9;&#x9;c.name AS association_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_end.ea_guid,&#xA;&#x9;&#x9;o_end.object_type,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;o_start.name,&#xA;&#x9;&#x9;c.name&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong')))&#xA;WHERE&#xA;&#x9;(property_name GLOB '*[^a-zA-ZæøåéÆØÅÉ0-9]*'&#xA;&#x9;&#x9;OR property_name NOT GLOB '[a-zA-ZæøåéÆØÅÉ]*')&#xA;ORDER BY&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Finds the classifiers for which an opposite association end has a name having characters that are invalid according to the internal rules of the agency. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query model_elements_invalid_names_internal. #DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_association_ends_with_notes"
+           GUID="{E00E8DC5-FA39-473d-BDDB-4CF5334FFCF3}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;&#x9;o_start.name AS classifier_name,&#xA;&#x9;&#x9;c.destrole AS property_name,&#xA;&#x9;&#x9;c.destrolenote AS notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_end.ea_guid,&#xA;&#x9;&#x9;o_end.object_type,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcerolenote&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;)&#xA;WHERE&#xA;&#x9;notes IS NOT NULL&#xA;ORDER BY&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Finds the classifiers for which an opposite association end has non-null notes. Model views cannot show connectors or connector ends, this query can be used in a model view search folder.#DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_association_ends_with_stereotype_not_from_profile"
+           GUID="{0156D080-A649-46b6-9A47-2F4AEF7C1357}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;&#x9;p_start.name AS package_name,&#xA;&#x9;&#x9;o_start.name AS classifier_name,&#xA;&#x9;&#x9;c.destrole AS property_name,&#xA;&#x9;&#x9;c.deststereotype AS primary_unqualified_stereotype,&#xA;&#x9;&#x9;x.description AS stereotypes&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorDestEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_end.ea_guid,&#xA;&#x9;&#x9;o_end.object_type,&#xA;&#x9;&#x9;p_end.name,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcestereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorSourceEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;)&#xA;WHERE&#xA;&#x9;(stereotypes LIKE '%GUID%'&#xA;&#x9;&#x9;OR (stereotypes NOT LIKE '%GUID%'&#xA;&#x9;&#x9;&#x9;AND stereotypes NOT LIKE '%FQNAME%'))&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Finds the classifiers for which an opposite association end has a stereotype not from a UML profile. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query stereotypes_not_from_profile #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_associations_or_association_ends_with_duplicate_tags"
+           GUID="{CC607C41-B5A7-49ff-871F-F20E5FAA1392}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;o_start.name AS classifier_name,&#xA;&#x9;c.name AS element_name,&#xA;&#x9;'association' AS element_type,&#xA;&#x9;ct.property AS tag_name&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_connectortag ct ON&#xA;&#x9;ct.elementid = c.connector_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.name,&#xA;&#x9;ct.property&#xA;HAVING&#xA;&#x9;count(ct.property) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o_end.ea_guid,&#xA;&#x9;o_end.object_type,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;'source association end',&#xA;&#x9;tv.tagvalue&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.tagvalue&#xA;HAVING&#xA;&#x9;count(tv.tagvalue) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o_start.ea_guid,&#xA;&#x9;o_start.object_type,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;'target association end',&#xA;&#x9;tv.tagvalue&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.destrole,&#xA;&#x9;tv.tagvalue&#xA;HAVING&#xA;&#x9;count(tv.tagvalue) &gt; 1;&#xA;#DB=COMMENT# Find the classifiers with association ends and relationships that have more than one tagged value with the same name. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query model_elements_duplicate_tags. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_associations_with_unspecified_direction"
+           GUID="{C9D74291-6D97-46af-A1BA-90B4C5F9296A}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;c.name AS association_name,&#xA;&#x9;c.direction,&#xA;&#x9;o_start.name as source_name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_end.name as target_name,&#xA;&#x9;c.destrole&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.Direction = 'Unspecified'&#xA;ORDER BY&#xA;&#x9;c.name;&#xA;#DB=COMMENT# Find the classifiers with associations that have an unspecified direction. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query associations_unspecified_direction. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_duplicate_names"
+           GUID="{48EEA0D3-5401-4aeb-8913-97765C27DC71}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;o.name,&#xA;&#x9;o.object_type,&#xA;&#x9;o.stereotype&#xA;FROM&#xA;&#x9;t_object o&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND object_type IN ('Class', 'Enumeration', 'Interface', 'DataType')&#xA;&#x9;AND EXISTS&#xA;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o2&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o2.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o2.name = o.name&#xA;&#x9;&#x9;&#x9;AND o2.ea_guid &lt;&gt; o.ea_guid);&#xA;#DB=COMMENT# Find the classifiers that have the same name as another classifier in the given package and its subpackages. This interpretation is stricter than the UML 2.5.1 specification, where a package is a namespace, and its subpackages are other namespaces. This query also finds the classifiers that have the same name but are of a different kind. This interpretation is stricter than the UML 2.5.1 specification, that permits named elements to have the same name if they are of a different kind. See operation isDistinguishableFrom() in clause 7.8.9.7, operation membersAreDistinguishable() in clause 7.8.10.8 and constraint members_distinguisable in clause 7.8.10.7. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="classifiers_with_navigable_association_ends_without_explicit_multiplicity"
+           GUID="{F2E16AC9-F905-4a1e-9AFB-D721E3504EF6}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o_start.ea_guid AS CLASSGUID,&#xA;&#x9;o_start.object_type AS CLASSTYPE,&#xA;&#x9;o_start.name AS classifier_name,&#xA;&#x9;c.destrole AS property_name,&#xA;&#x9;o_end.name AS type,&#xA;&#x9;c.name AS association_name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))&#xA;&#x9;AND c.destcard IS NULL&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o_end.ea_guid,&#xA;&#x9;o_end.object_type,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_start.name,&#xA;&#x9;c.name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))&#xA;&#x9;AND c.sourcecard IS NULL;&#xA;#DB=COMMENT# Find classifiers that have properties in the form of navigable association ends that don't have a multiplicity specified explicitly. If it is not specified, it is assumed to be 1, according to the UML specification. However, having a explicitly specified multiplicity is preferable. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="constraints"
+           GUID="{177A5C10-0B77-4d83-9731-8C5008E5C275}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;o.name AS constrained_element_name,&#xA;&#x9;oc.[Constraint] AS constraint_name,&#xA;&#x9;oc.notes AS constraint_text&#xA;FROM&#xA;&#x9;t_objectconstraint oc&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = oc.object_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;'(see diagram)',&#xA;&#x9;o.name,&#xA;&#x9;o.note&#xA;FROM&#xA;&#x9;t_object o&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type = 'Constraint';&#xA;#DB=COMMENT# For more information about constraints in t_objectconstraint, see https://sparxsystems.com/eahelp/constraints.html. For more information about constraints in t_object, see https://sparxsystems.com/eahelp/element_constraint.html. &#34;constraint&#34; is a reserved word, therefore the square brackets are needed for columns with name &#34;Constraint&#34;. Not (yet?) implemented are the following: (1) take into account the tables t_attributeconstraints, t_connectorconstraint and t_roleconstraint; (2) check connectors of type NoteLink and check t_object.PDATA4 to find the model elements that are constrained by the constraints in t_object. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="context_diagrams_without_central_classifier"
+           GUID="{9C568A9A-771B-45b8-957C-BC016455F994}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name LIKE '&lt;Search Term&gt;%'&#xA;&#x9;AND NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramobjects do&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;do.object_id = o.object_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;d.diagram_id = do.diagram_id&#xA;&#x9;&#x9;AND o.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);&#xA;#DB=COMMENT# Find the context diagrams that do not contain the classifier they claim to contain according to the name of the context diagram. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="diagrams_with_diagramdetails"
+           GUID="{2FFC9447-4996-4b4d-BCE5-F09A9A619733}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.showdetails = 1;&#xA;#DB=COMMENT# Find the diagrams that show the diagram details (see also https://sparxsystems.com/eahelp/appearance_options_diag.html). #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="diagrams_with_diagramnotes"
+           GUID="{B4D415F5-5EA1-4a48-BDC3-72A51B1380F9}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND EXISTS&#xA;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramobjects do&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;o.object_id = do.object_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;do.diagram_id = d.diagram_id&#xA;&#x9;&#x9;AND o.ntype = 18);&#xA;#DB=COMMENT# Find the diagrams that contains diagram notes, also called a diagram properties note (see https://sparxsystems.com/eahelp/addpropertiesnote.html). #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="diagrams_with_invalid_names_da"
+           GUID="{9BE287B7-E2E0-4db1-ADA0-6FA591597ED6}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;INNER JOIN t_package p ON&#xA;&#x9;d.package_id = p.package_id&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name &lt;&gt; #Concat 'Pakkeafhængigheder ', p.name#&#xA;&#x9;AND d.name &lt;&gt; #Concat 'Subpakker ', p.name#&#xA;&#x9;AND #Substring d.name, 1, 16# &lt;&gt; 'Oversigtsdiagram'&#xA;&#x9;AND #Substring d.name, 1, 15# &lt;&gt; 'Kontekstdiagram'&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name LIKE 'Kontekstdiagram%'&#xA;&#x9;AND NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;1&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND #Substring d.name, 17# = o.name)&#xA;ORDER BY&#xA;&#x9;2;&#xA;#DB=COMMENT# The names of the diagrams have to follow a specific pattern to be able to create a good feature catalogue. The name must start with one of the following (Danish): 'Pakkeafhængigheder', 'Subpakker', 'Oversigtsdiagram' or 'Kontekstdiagram'. The part of the name after 'Kontekstdiagram' must be equal to the name of an existing object in the model that the diagram resides in, if the diagram's name starts with 'Kontekstdiagram'.  #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="diagrams_with_invalid_names_en"
+           GUID="{CE1FB2AF-49E3-4402-A446-844A105B6ADB}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;INNER JOIN t_package p ON&#xA;&#x9;d.package_id = p.package_id&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name &lt;&gt; #Concat 'Package dependencies ', p.name#&#xA;&#x9;AND d.name &lt;&gt; #Concat 'Subpackages ', p.name#&#xA;&#x9;AND #Substring d.name, 1, 16# &lt;&gt; 'Overview diagram'&#xA;&#x9;AND #Substring d.name, 1, 15# &lt;&gt; 'Context diagram'&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name LIKE 'Context diagram%'&#xA;&#x9;AND NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;1&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND #Substring d.name, 17# = o.name)&#xA;ORDER BY&#xA;&#x9;2;&#xA;#DB=COMMENT# The names of the diagrams have to follow a specific pattern to be able to create a good feature catalogue. The name must start with one of the following (English): 'Package dependencies', 'Subpackages', 'Overview diagram' or 'Context diagram'. The part of the name after 'Context diagram' must be equal to the name of an existing object in the model that the diagram resides in, if the diagram's name starts with 'Context diagram'.  #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="duplicate_attributes_classifier"
+           GUID="{329C6C3B-2A6B-4e9a-B7B5-BA0AE20DE812}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;WITH self_and_ancestor(object_id,&#xA;&#x9;name,&#xA;&#x9;level) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.object_id,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;1&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.object_id = #CurrentElementID#&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o_parent.object_id,&#xA;&#x9;&#x9;o_parent.name,&#xA;&#x9;&#x9;s.level * 2&#xA;&#x9;FROM&#xA;&#x9;&#x9;(self_and_ancestor s&#xA;&#x9;INNER JOIN t_connector c ON&#xA;&#x9;&#x9;(s.object_id = c.start_object_id&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Generalization'))&#xA;&#x9;INNER JOIN t_object o_parent ON&#xA;&#x9;&#x9;c.end_object_id = o_parent.object_id&#xA;),&#xA;&#x9;attributes_self_and_ancestor(CLASSGUID,&#xA;&#x9;CLASSTYPE,&#xA;&#x9;property_name,&#xA;&#x9;defining_classifier_object_id,&#xA;&#x9;defining_classifier_name,&#xA;&#x9;level) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;o.object_id,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;o.level&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_attribute a&#xA;&#x9;INNER JOIN&#xA;&#x9;self_and_ancestor o&#xA;ON&#xA;&#x9;&#x9;a.object_id = o.object_id&#xA;&#x9;)&#xA;&#x9;SELECT&#xA;&#x9;&#x9;CLASSGUID,&#xA;&#x9;&#x9;CLASSTYPE,&#xA;&#x9;&#x9;a1.property_name,&#xA;&#x9;&#x9;defining_classifier_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;(&#xA;&#x9;&#x9;SELECT&#xA;&#x9;&#x9;&#x9;*&#xA;&#x9;&#x9;FROM&#xA;&#x9;&#x9;&#x9;attributes_self_and_ancestor) a1&#xA;&#x9;INNER JOIN&#xA;&#x9;(&#xA;&#x9;&#x9;SELECT&#xA;&#x9;&#x9;&#x9;property_name&#xA;&#x9;&#x9;FROM&#xA;&#x9;&#x9;&#x9;attributes_self_and_ancestor&#xA;&#x9;&#x9;GROUP BY&#xA;&#x9;&#x9;&#x9;property_name&#xA;&#x9;&#x9;HAVING&#xA;&#x9;&#x9;&#x9;COUNT(*) &gt; 1) a2 ON&#xA;&#x9;&#x9;a1.property_name = a2.property_name&#xA;)&#xA;#DB=COMMENT# Find the owned and inherited attributes of the classifier selected in the Project Browser that have the same name as another attribute of that classifier. Association ends are not taken into account. Note: the query contains &#34;level * 2&#34; instead of the usual &#34;level + 1&#34;. This is because there is a bug in EA that causes numeric addition not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="enumeration_literals_attributes_with_stereotype_enum"
+           GUID="{FD34C919-C09E-434c-BA0F-0EA32C757B20}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS enumeration_name,&#xA;&#x9;a.name AS attribute_or_literal_name,&#xA;&#x9;a.styleex,&#xA;&#x9;a.stereotype AS primary_unqualified_stereotype,&#xA;&#x9;x.description AS stereotypes&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id)&#xA;LEFT JOIN t_xref x ON&#xA;&#x9;a.ea_guid = x.client&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type = 'Enumeration'&#xA;&#x9;AND x.description LIKE '%Name=enum;%';&#xA;#DB=COMMENT# Find the enumeration attributes and literals defined that have stereotype &#34;enum&#34;. See also https://sparxsystems.com/forums/smf/index.php/topic,39483.msg243694.html#msg243694. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="enumeration_literals_two_consecutive_spaces"
+           GUID="{EF59B26F-9FB2-4148-92CE-A8C6007C2894}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;&#x9;p.name AS package_name,&#xA;&#x9;&#x9;o.name AS classifier_name,&#xA;&#x9;&#x9;a.name AS enumeration_literal_name&#xA;FROM&#xA;&#x9;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Enumeration')&#xA;&#x9;AND a.name LIKE '%  %'&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;enumeration_literal_name;&#xA;#DB=COMMENT# Find the enumeration literals whose name has two consecutive spaces. The occurrence of two consecutive spaces is very likely an error. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="enumeration_literals_with_duplicate_names"
+           GUID="{A15C3F56-6674-4283-84B4-45F603E6F5AC}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;&#x9;p.name AS package_name,&#xA;&#x9;&#x9;o.name AS classifier_name,&#xA;&#x9;&#x9;a.name AS enumeration_literal_name&#xA;FROM&#xA;&#x9;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Enumeration')&#xA;&#x9;AND EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_attribute a2&#xA;&#x9;WHERE&#xA;&#x9;&#x9;a2.object_id = a.object_id&#xA;&#x9;&#x9;AND a2.name = a.name&#xA;&#x9;&#x9;AND a2.ea_guid &lt;&gt; a.ea_guid )&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;enumeration_literal_name;&#xA;#DB=COMMENT# Find the enumeration literals that have the same name as another enumeration literal of the same enumeration. See also the UML 2.5.1 specification, clause 10.2.3.3: An EnumerationLiteral has a name that shall be used to identify it within its Enumeration. The EnumerationLiteral name is scoped within and shall be unique within its Enumeration. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_custom_stereotype"
+           GUID="{1210D0DF-CE99-4432-AAB2-420796348791}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;&#x9;p.name AS package_name,&#xA;&#x9;&#x9;NULL AS classifier_name,&#xA;&#x9;&#x9;NULL AS property_name,&#xA;&#x9;&#x9;o.stereotype AS primary_unqualified_stereotype,&#xA;&#x9;&#x9;x.description AS stereotypes&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_package p&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;p.ea_guid = o.ea_guid)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;o.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.ea_guid,&#xA;&#x9;&#x9;o.object_type,&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;o.stereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_object o&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;o.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;a.stereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_attribute a&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;a.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_start.name,&#xA;&#x9;&#x9;o_start.name,&#xA;&#x9;&#x9;c.destrole,&#xA;&#x9;&#x9;c.deststereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorDestEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_end.name,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcestereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorSourceEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;)&#xA;WHERE&#xA;&#x9;stereotypes LIKE '%GUID%'&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Show the model elements with a custom stereotype, that is a stereotype that is (or at some point was) defined in the project's reference data. See also https://sparxsystems.com/eahelp/creatingcustomstereotypes.html, table t_stereotypes and query stereotypes. This query is closely related to model_elements_stereotype_not_from_profile. Usually, this query and model_elements_stereotype_not_from_profile will return the same results. However, model elements with a stereotype stored as @STEREO;Name=DKEgenskab;GUID={16570901-9E07-4319-81A7-25B52F03CF74};FQName=Grunddata::DKEgenskab;@ENDSTEREO have been seen in certain models, therefore the split into two queries. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_duplicate_tags"
+           GUID="{0D3721D9-3668-4cb3-A4A0-49F5E82D7A21}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;o.name AS element_name,&#xA;&#x9;op.property AS tag_name&#xA;FROM&#xA;&#x9;(t_objectproperties op&#xA;INNER JOIN t_object o ON&#xA;&#x9;op.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.ea_guid = o.ea_guid&#xA;WHERE&#xA;&#x9;p.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Package')&#xA;GROUP BY&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;o.name,&#xA;&#x9;op.property&#xA;HAVING&#xA;&#x9;count(op.property) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;NULL,&#xA;&#x9;o.name,&#xA;&#x9;op.property&#xA;FROM&#xA;&#x9;t_objectproperties op&#xA;INNER JOIN t_object o ON&#xA;&#x9;op.object_id = o.object_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface', 'Enumeration')&#xA;GROUP BY&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;o.name,&#xA;&#x9;op.property&#xA;HAVING&#xA;&#x9;count(op.property) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;'Attribute',&#xA;&#x9;NULL,&#xA;&#x9;a.name,&#xA;&#x9;at.property&#xA;FROM&#xA;&#x9;(t_attributetag AT&#xA;INNER JOIN t_attribute a ON&#xA;&#x9;at.elementid = a.id)&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface', 'Enumeration')&#xA;GROUP BY&#xA;&#x9;a.ea_guid,&#xA;&#x9;a.name,&#xA;&#x9;at.property&#xA;HAVING&#xA;&#x9;count(at.property) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;'t_connector',&#xA;&#x9;c.name,&#xA;&#x9;ct.property&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_connectortag ct ON&#xA;&#x9;ct.elementid = c.connector_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.name,&#xA;&#x9;ct.property&#xA;HAVING&#xA;&#x9;count(ct.property) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.tagvalue&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.tagvalue&#xA;HAVING&#xA;&#x9;count(tv.tagvalue) &gt; 1&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;c.destrole,&#xA;&#x9;tv.tagvalue&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;GROUP BY&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.connector_type,&#xA;&#x9;c.destrole,&#xA;&#x9;tv.tagvalue&#xA;HAVING&#xA;&#x9;count(tv.tagvalue) &gt; 1;&#xA;#DB=COMMENT# Find the packages, classifiers, properties, enumeration literals and relationships that have more than one tagged value with the same name. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_invalid_names_internal"
+           GUID="{3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;&#x9;p.name AS package_name,&#xA;&#x9;&#x9;o.name AS classifier_name,&#xA;&#x9;&#x9;NULL AS property_or_enumeration_literal_name,&#xA;&#x9;&#x9;o.name AS element_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;a.name&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_attribute a&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_start.name,&#xA;&#x9;&#x9;o_start.name,&#xA;&#x9;&#x9;c.destrole,&#xA;&#x9;&#x9;c.destrole&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_end.name,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcerole&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong')))&#xA;WHERE&#xA;&#x9;(element_name GLOB '*[^a-zA-ZæøåéÆØÅÉ0-9_]*'&#xA;&#x9;&#x9;OR element_name NOT GLOB '[a-zA-ZæøåéÆØÅÉ]*')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;a.name&#xA;FROM&#xA;&#x9;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Enumeration')&#xA;&#x9;AND a.name GLOB '*[^a-zA-ZæøåéÆØÅÉ0-9Ωαβ, .():+''&gt;=&lt;&amp;§/_%-]*'&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_or_enumeration_literal_name;&#xA;#DB=COMMENT# Finds the classifiers, properties and enumeration literals with names having characters that are invalid according to the internal rules of the agency. In addition, in both XML and databases, the first character of a name must be alphabetic, and thus not start with a digit. To ease conversion to XML and database schemas, the first character of a name in the model has to be alphabetic as well. The latter rule does not apply to enumeration literals. #DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_nonpublic_scope"
+           GUID="{7C0507D3-12B7-4e40-B722-5B046756792F}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT * FROM (&#xA;SELECT&#xA;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;p.Name AS package_name,&#xA;&#x9;NULL AS classifier_name,&#xA;&#x9;NULL AS property_name,&#xA;&#x9;o.scope AS scope&#xA;FROM&#xA;&#x9;t_package p&#xA;INNER JOIN t_object o ON&#xA;&#x9;p.ea_guid = o.ea_guid&#xA;WHERE&#xA;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;NULL AS property_name,&#xA;&#x9;o.scope&#xA;FROM&#xA;&#x9;t_object o&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;'Attribute',&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name,&#xA;&#x9;a.name,&#xA;&#x9;a.scope&#xA;FROM&#xA;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_start.name,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;c.destaccess&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_start ON&#xA;&#x9;o_start.package_id = p_start.package_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_end.name,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;c.sourceaccess&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_end ON&#xA;&#x9;o_end.package_id = p_end.package_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')))&#xA;&#x9;WHERE scope &lt;&gt; 'Public'&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Finds the model elements that do not have their scope set to &#34;Public&#34;. #DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_notes"
+           GUID="{217DF831-2BE4-498a-9D5E-3F44F089CB55}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;p.Name AS package_name,&#xA;&#x9;NULL AS classifier_name,&#xA;&#x9;NULL AS property_name,&#xA;&#x9;o.note AS notes&#xA;FROM&#xA;&#x9;t_package p&#xA;INNER JOIN t_object o ON&#xA;&#x9;p.ea_guid = o.ea_guid&#xA;WHERE&#xA;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;NULL AS property_name,&#xA;&#x9;o.note AS notes&#xA;FROM&#xA;&#x9;t_object o&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;'Attribute',&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name,&#xA;&#x9;a.name,&#xA;&#x9;a.notes&#xA;FROM&#xA;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_start.name,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;c.destrolenote AS notes&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_start ON&#xA;&#x9;o_start.package_id = p_start.package_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_end.name,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;c.sourcerolenote&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_end ON&#xA;&#x9;o_end.package_id = p_end.package_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Shows the notes on model elements. #DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_notes_not_null_not_empty"
+           GUID="{F97DC480-B755-41d6-BD9C-611E4B9CB281}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;&#x9;p.Name AS package_name,&#xA;&#x9;&#x9;NULL AS classifier_name,&#xA;&#x9;&#x9;NULL AS property_name,&#xA;&#x9;&#x9;o.note AS notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_package p&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;p.ea_guid = o.ea_guid&#xA;&#x9;WHERE&#xA;&#x9;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.ea_guid,&#xA;&#x9;&#x9;o.object_type,&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name AS classifier_name,&#xA;&#x9;&#x9;NULL AS property_name,&#xA;&#x9;&#x9;o.note AS notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_object o&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;a.notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_attribute a&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_start.name,&#xA;&#x9;&#x9;o_start.name,&#xA;&#x9;&#x9;c.destrole,&#xA;&#x9;&#x9;c.destrolenote AS notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_end.name,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcerolenote&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;)&#xA;WHERE&#xA;&#x9;(notes IS NOT NULL AND LENGTH(notes) &gt; 0)&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Finds the model elements with a note that is not null and not empty. Note: When creating a new attribute (https://sparxsystems.com/eahelp/attributesmainpage.html), its note is null until something is written into it. However, when copying an attribute from another classifier (https://sparxsystems.com/eahelp/copyingattributes.html), the note of the copy is NOT null, it is an empty string. But then again, when importing a model from XMI in another project file, all notes are null, even though the attributes originally were copied. Anyway, this explains the WHERE clause. #DB=COMMENT#&#xA;"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_stereotype_not_from_profile"
+           GUID="{4A308E24-C345-4e8a-9DB8-3A4A807C2CBF}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;&#x9;p.name AS package_name,&#xA;&#x9;&#x9;NULL AS classifier_name,&#xA;&#x9;&#x9;NULL AS property_name,&#xA;&#x9;&#x9;o.stereotype AS primary_unqualified_stereotype,&#xA;&#x9;&#x9;x.description AS stereotypes&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_package p&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;p.ea_guid = o.ea_guid)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;o.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;o.ea_guid,&#xA;&#x9;&#x9;o.object_type,&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;o.stereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;(t_object o&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;o.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;a.ea_guid,&#xA;&#x9;&#x9;'Attribute',&#xA;&#x9;&#x9;NULL,&#xA;&#x9;&#x9;p.name,&#xA;&#x9;&#x9;o.name,&#xA;&#x9;&#x9;a.name,&#xA;&#x9;&#x9;a.stereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_attribute a&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;a.object_id = o.object_id)&#xA;&#x9;INNER JOIN t_package p ON&#xA;&#x9;&#x9;o.package_id = p.package_id)&#xA;&#x9;LEFT JOIN t_xref x ON&#xA;&#x9;&#x9;a.ea_guid = x.client&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_start.name,&#xA;&#x9;&#x9;o_start.name,&#xA;&#x9;&#x9;c.destrole,&#xA;&#x9;&#x9;c.deststereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_start ON&#xA;&#x9;&#x9;o_start.package_id = p_start.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorDestEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;&#x9;SELECT&#xA;&#x9;&#x9;c.ea_guid,&#xA;&#x9;&#x9;'AssociationEnd',&#xA;&#x9;&#x9;'t_connector',&#xA;&#x9;&#x9;p_end.name,&#xA;&#x9;&#x9;o_end.name,&#xA;&#x9;&#x9;c.sourcerole,&#xA;&#x9;&#x9;c.sourcestereotype,&#xA;&#x9;&#x9;x.description&#xA;&#x9;FROM&#xA;&#x9;&#x9;((t_connector c&#xA;&#x9;INNER JOIN t_object o_start ON&#xA;&#x9;&#x9;c.start_object_id = o_start.object_id)&#xA;&#x9;INNER JOIN t_object o_end ON&#xA;&#x9;&#x9;c.end_object_id = o_end.object_id)&#xA;&#x9;INNER JOIN t_package p_end ON&#xA;&#x9;&#x9;o_end.package_id = p_end.package_id&#xA;&#x9;LEFT JOIN t_xref x&#xA;&#x9;ON&#xA;&#x9;&#x9;x.client = c.ea_guid&#xA;&#x9;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;&#x9;AND x.type = 'connectorSourceEnd property'&#xA;&#x9;WHERE&#xA;&#x9;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;)&#xA;WHERE&#xA;&#x9;stereotypes NOT LIKE '%FQNAME%'&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Show the model elements with a stereotype that is not defined in a UML profile. See also query stereotypes. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_stereotypes"
+           GUID="{13B0F7D8-9A9B-4e07-B081-5C40C20D7762}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;NULL AS classifier_name,&#xA;&#x9;NULL AS property_name,&#xA;&#x9;o.stereotype AS primary_unqualified_stereotype,&#xA;&#x9;x.description AS stereotypes&#xA;FROM&#xA;&#x9;(t_package p&#xA;INNER JOIN t_object o ON&#xA;&#x9;p.ea_guid = o.ea_guid)&#xA;LEFT JOIN t_xref x ON&#xA;&#x9;o.ea_guid = x.client&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;WHERE&#xA;&#x9;p.package_id IN (#Branch#)&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;o.ea_guid,&#xA;&#x9;o.object_type,&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name,&#xA;&#x9;NULL,&#xA;&#x9;o.stereotype,&#xA;&#x9;x.description&#xA;FROM&#xA;&#x9;(t_object o&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id)&#xA;LEFT JOIN t_xref x ON&#xA;&#x9;o.ea_guid = x.client&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;'Attribute',&#xA;&#x9;NULL,&#xA;&#x9;p.name,&#xA;&#x9;o.name,&#xA;&#x9;a.name,&#xA;&#x9;a.stereotype,&#xA;&#x9;x.description&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id)&#xA;LEFT JOIN t_xref x ON&#xA;&#x9;a.ea_guid = x.client&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_start.name,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;c.deststereotype,&#xA;&#x9;x.description&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_start ON&#xA;&#x9;o_start.package_id = p_start.package_id&#xA;LEFT JOIN t_xref x&#xA;&#x9;ON x.client = c.ea_guid&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;AND x.type = 'connectorDestEnd property'&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_end.name,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;c.sourcestereotype,&#xA;&#x9;x.description&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_end ON&#xA;&#x9;o_end.package_id = p_end.package_id&#xA;LEFT JOIN t_xref x&#xA;&#x9;ON x.client = c.ea_guid&#xA;&#x9;AND x.name = 'Stereotypes'&#xA;&#x9;AND x.type = 'connectorSourceEnd property'&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))&#xA;ORDER BY&#xA;&#x9;package_name,&#xA;&#x9;classifier_name,&#xA;&#x9;property_name;&#xA;#DB=COMMENT# Shows all the stereotypes of the model elements. The stereotypes column contains all the stereotypes. For each of the stereotypes applied to a model element, a string like one of the following is present: @STEREO;Name=&lt;stereo&gt;;FQName=&lt;profile_name&gt;::&lt;stereo&gt;;@ENDSTEREO; (if the stereotype is defined in a UML profile, possibly as part of an MDG) or @STEREO;Name=&lt;stereo&gt;;GUID=&lt;guid&gt;;@ENDSTEREO; (if the stereotype is a custom stereotype, see https://sparxsystems.com/eahelp/creatingcustomstereotypes.html and see table t_stereotypes). #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_tagged_value"
+           GUID="{54A920C9-5DAD-45eb-A251-6536E7E28867}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;o.Name AS Name,&#xA;&#x9;o.name AS classifier,&#xA;&#x9;NULL AS property,&#xA;&#x9;op.value AS tagged_value&#xA;FROM&#xA;&#x9;t_object o&#xA;INNER JOIN t_objectproperties op ON&#xA;&#x9;op.object_id = o.object_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;&#x9;AND op.property = ('&lt;Search Term&gt;')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;'Attribute',&#xA;&#x9;NULL,&#xA;&#x9;a.Name,&#xA;&#x9;o.name,&#xA;&#x9;a.name,&#xA;&#x9;at.value&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;INNER JOIN t_attributetag AT ON&#xA;&#x9;(a.id = at.elementid&#xA;&#x9;&#x9;AND at.property = '&lt;Search Term&gt;')&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;c.destrole,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;tv.notes&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = '&lt;Search Term&gt;')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.notes&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = '&lt;Search Term&gt;')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')&#xA;ORDER BY&#xA;&#x9;classifier,&#xA;&#x9;property;&#xA;#DB=COMMENT# Finds all classifiers and properties with the given tagged value. Works currently only for tagged values that are not of the memo type. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_elements_tagged_value_export"
+           GUID="{2229F872-F775-46bd-8E46-47C4D7C5081A}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;-- for display in EA&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;-- for import of tags via script import-data-model-custom-tags&#xA;&#x9;o.ea_guid AS GUID,&#xA;&#x9;-- for import of tags via script import-data-model-custom-tags&#xA;&#x9;o.name AS &#34;UML-NAVN&#34;,&#xA;&#x9;-- for import of tags via script import-data-model-custom-tags&#xA;&#x9;p.name AS NAMESPACE,&#xA;&#x9;-- for display in EA&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;-- for import of tags via script import-data-model-custom-tags&#xA;&#x9;upper(o.object_type) AS &#34;TYPE&#34;,&#xA;&#x9;-- for display in EA&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;-- for import of tags via script import-data-model-custom-tags&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;op.value&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_objectproperties op&#xA;&#x9;WHERE&#xA;&#x9;&#x9;op.object_id = o.object_id&#xA;&#x9;&#x9;AND op.property = ('&lt;Search Term&gt;')) AS &#34;&lt;Search Term&gt;&#34;&#xA;FROM&#xA;&#x9;t_object o&#xA;INNER JOIN t_package p ON&#xA;&#x9;o.package_id = p.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;a.ea_guid,&#xA;&#x9;a.ea_guid,&#xA;&#x9;a.Name,&#xA;&#x9;o.Name,&#xA;&#x9;'Attribute',&#xA;&#x9;CASE&#xA;&#x9;&#x9;WHEN instr(a.styleex, 'IsLiteral=1') = 0 THEN 'ATTRIBUTE'&#xA;&#x9;&#x9;ELSE 'ENUMERATION_LITERAL'&#xA;&#x9;END,&#xA;&#x9;NULL,&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;at.value&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_attributetag AT&#xA;&#x9;WHERE&#xA;&#x9;&#x9;a.id = at.elementid&#xA;&#x9;&#x9;AND at.property = ('&lt;Search Term&gt;'))&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;-- substr is 1-based&#xA;&#x9;'{dst' || substr(c.ea_guid, 4),&#xA;&#x9;c.destrole,&#xA;&#x9;o_start.name,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'ASSOCIATION_END',&#xA;&#x9;'t_connector',&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;tv.notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = ('&lt;Search Term&gt;'))&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;-- substr is 1-based&#xA;&#x9;'{src' || substr(c.ea_guid, 4),&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_end.name,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'ASSOCIATION_END',&#xA;&#x9;'t_connector',&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;tv.notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = ('&lt;Search Term&gt;'))&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.ea_guid,&#xA;&#x9;c.name,&#xA;&#x9;NULL,&#xA;&#x9;c.connector_type,&#xA;&#x9;'ASSOCIATION',&#xA;&#x9;'t_connector',&#xA;&#x9;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;ct.value&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_connectortag ct&#xA;&#x9;WHERE&#xA;&#x9;&#x9;ct.elementid = c.connector_id&#xA;&#x9;&#x9;AND ct.property = ('&lt;Search Term&gt;'))&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'));&#xA;#DB=COMMENT# Finds all classifiers, properties, enumeration literals and connectors with the given tagged value. This query can be used as the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): use the &#34;Copy Selected to Clipboard&#34; functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), paste in LibreOffice Calc, modify as needed and save as a CSV file. The query only works for tagged values that are not of the memo type. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="model_without_dependency_diagram_da"
+           GUID="{E8B2F87E-BE46-44a9-906B-4AC533900454}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;p.ea_guid AS CLASSGUID,&#xA;&#x9;'Package' AS CLASSTYPE,&#xA;&#x9;p.name&#xA;FROM&#xA;&#x9;t_package p&#xA;WHERE&#xA;&#x9;p.package_id = #Package#&#xA;&#x9;AND NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagram d&#xA;&#x9;WHERE&#xA;&#x9;&#x9;d.package_id = #Package#&#xA;&#x9;&#x9;AND d.Diagram_Type = 'Package'&#xA;&#x9;&#x9;AND d.name = #Concat 'Pakkeafhængigheder ',p.name#&#xA;&#x9;);"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="multivalued_attributes"
+           GUID="{18DEB9C7-F352-4cfb-8164-2A623A71EA7F}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS attribute_name,&#xA;&#x9;a.type AS type_name,&#xA;&#x9;a.classifier AS type_id,&#xA;&#x9;a.lowerbound,&#xA;&#x9;a.upperbound&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND a.upperbound NOT IN ('0', '1')&#xA;ORDER BY&#xA;&#x9;p.name,&#xA;&#x9;o.name,&#xA;&#x9;a.name;&#xA;#DB=COMMENT# Find all multivalued attributes, that is all attributes with a multiplicity with an upper bound greater than one. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="navigable_association_ends_not_by_reference"
+           GUID="{294A462A-E312-46f8-9C33-8A38A560DB0B}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;'AssociationEnd' AS CLASSTYPE,&#xA;&#x9;'t_connector' AS CLASSTABLE,&#xA;&#x9;o_start.name AS start_classifier_name,&#xA;&#x9;c.name AS association_name,&#xA;&#x9;c.destrole AS end_classifier_role,&#xA;&#x9;o_end.name AS end_classifier_name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Association')&#xA;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND c.connector_type = 'Association'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')&#xA;&#x9;AND (NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = 'inlineOrByReference')&#xA;&#x9;OR (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = 'inlineOrByReference') &lt;&gt; 'byReference')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_end.name,&#xA;&#x9;c.name,&#xA;&#x9;c.sourcerole AS end_classifier_role,&#xA;&#x9;o_start.name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Association')&#xA;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND c.connector_type = 'Association'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')&#xA;&#x9;AND (NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = 'inlineOrByReference')&#xA;&#x9;OR (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;notes&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_taggedvalue tv&#xA;&#x9;WHERE&#xA;&#x9;&#x9;tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = 'inlineOrByReference') &lt;&gt; 'byReference');&#xA;#DB=COMMENT# Find the navigable association ends that don't have value inlineOrByReference set to byReference. Aggregations and compositions are not considered in this query. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="navigable_association_ends_without_role_name"
+           GUID="{8223A329-F915-4c93-A2E5-9616D089FFD3}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;'AssociationEnd' AS CLASSTYPE,&#xA;&#x9;'t_connector' AS CLASSTABLE,&#xA;&#x9;o_start.name AS start_classifier_name,&#xA;&#x9;c.name AS association_name,&#xA;&#x9;c.destrole AS end_classifier_role,&#xA;&#x9;o_end.name AS end_classifier_name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))&#xA;&#x9;AND c.destrole IS NULL&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_end.name,&#xA;&#x9;c.name,&#xA;&#x9;c.sourcerole AS end_classifier_role,&#xA;&#x9;o_start.name&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))&#xA;&#x9;AND c.sourcerole IS NULL;&#xA;#DB=COMMENT# Find the navigable association ends that don't have a role name. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="objects_language_not_none"
+           GUID="{D09B12C8-D96B-4c21-8051-5E50B6E59129}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;o.name,&#xA;&#x9;o.object_type,&#xA;&#x9;o.gentype&#xA;FROM&#xA;&#x9;t_object o&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface', 'Package')&#xA;&#x9;AND (o.gentype IS NULL&#xA;&#x9;&#x9;OR o.gentype &lt;&gt; '&lt;none&gt;');&#xA;#DB=COMMENT# Find the elements that are specified as being language-specific, that is, that have their language not set to &#34;&lt;none&gt;&#34; (see also https://sparxsystems.com/eahelp/generalproperties.html). Script set-language-none can be used to update these elements. Note: the default language can be configured in EA. It is a model-specific option, see https://sparxsystems.com/eahelp/code_generation_options.html. There is no user-specific option to set the default language. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="optional_properties"
+           GUID="{07644A48-EC19-41fd-8BDA-A5E102912824}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS property,&#xA;&#x9;#Concat a.lowerbound, '..', a.upperbound # AS multiplicity&#xA;FROM&#xA;&#x9;t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND a.lowerbound = '0'&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;c.destcard&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction = 'Source -&gt; Destination'&#xA;&#x9;AND #Substring c.destcard,&#xA;&#x9;1,&#xA;&#x9;1# = '0'&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;'AssociationEnd' AS CLASSTYPE,&#xA;&#x9;'t_connector',&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;c.sourcecard&#xA;FROM&#xA;&#x9;(t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction = 'Destination -&gt; Source'&#xA;&#x9;AND #Substring c.sourcecard,&#xA;&#x9;1,&#xA;&#x9;1# = '0'&#xA;ORDER BY&#xA;&#x9;classifier_name,&#xA;&#x9;property;&#xA;#DB=COMMENT# Find optional properties, that is properties that have a lower bound of 0. Properties that are actually conditional because of a constraint are also returned. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="orphans"
+           GUID="{5372E6FF-5968-40a5-945D-FC1BAC3EDAEF}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;o.ea_guid AS CLASSGUID,&#xA;&#x9;o.object_type AS CLASSTYPE,&#xA;&#x9;o.object_type,&#xA;&#x9;o.name,&#xA;&#x9;o.note AS notes,&#xA;&#x9;o.createddate,&#xA;&#x9;o.modifieddate&#xA;FROM&#xA;&#x9;t_object o&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND NOT EXISTS &#xA;(&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramobjects&#xA;&#x9;INNER JOIN t_diagram ON&#xA;&#x9;&#x9;t_diagramobjects.diagram_id = t_diagram.diagram_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;t_diagram.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND t_diagramobjects.object_id = o.object_id);&#xA;#DB=COMMENT# Find the objects that are not present on any diagram (in the selected package). #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="properties_without_explicit_multiplicity"
+           GUID="{65E539E6-EFC6-477f-866C-09E54F852143}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;p.name AS package_name,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS property_name,&#xA;&#x9;a.type AS type,&#xA;&#x9;NULL AS association_name&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;&#x9;AND (a.lowerbound IS NULL OR a.upperbound IS NULL)&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_start.name,&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;o_end.name,&#xA;&#x9;c.name&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_start ON&#xA;&#x9;o_start.package_id = p_start.package_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))&#xA;&#x9;AND c.destcard IS NULL&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;p_end.name,&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;o_start.name,&#xA;&#x9;c.name&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;INNER JOIN t_package p_end ON&#xA;&#x9;o_end.package_id = p_end.package_id&#xA;WHERE&#xA;&#x9;(((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))&#xA;&#x9;AND c.sourcecard IS NULL;&#xA;#DB=COMMENT# Find the properties of classifiers (not including non-navigable properties) that don't have a multiplicity specified explicitly. If it is not specified, it is assumed to be one, according to the UML specification. However, having a explicitly specified multiplicity is preferable. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="scripts_and_scriptsgroups_with_scriptgroupname_like"
+           GUID="{43546C28-DA6E-4285-A2B6-4ED16643F995}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;s.ScriptCategory,&#xA;&#x9;s.ScriptName,&#xA;&#x9;s.ScriptAuthor,&#xA;&#x9;s.Notes,&#xA;&#x9;s.Script&#xA;FROM&#xA;&#x9;t_script s&#xA;WHERE&#xA;&#x9;s.Script LIKE '&lt;Search Term&gt;'&#xA;&#x9;AND s.Notes LIKE '&lt;Group%'&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;s.ScriptCategory,&#xA;&#x9;s.ScriptName,&#xA;&#x9;s.ScriptAuthor,&#xA;&#x9;s.Notes,&#xA;&#x9;s.Script&#xA;FROM&#xA;&#x9;t_script s&#xA;INNER JOIN t_script s1 ON&#xA;&#x9;s1.ScriptName = s.ScriptAuthor&#xA;WHERE&#xA;&#x9;s1.script LIKE '&lt;Search Term&gt;'&#xA;&#x9;AND s1.Notes LIKE '&lt;Group%'&#xA;ORDER BY&#xA;&#x9;ScriptCategory,&#xA;&#x9;ScriptName;&#xA;#DB=COMMENT# Find the script groups that have a name like the given search term. Find also the scripts in those script groups. Use search term `eamt-%` to find the scripts and script groups from EA Modelling Tools JavaScript #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="sequence_numbers_classifier"
+           GUID="{EF9F67A0-0C04-4e6f-B7F3-42263D659E43}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS property,&#xA;&#x9;at.value AS sequenceNumber,&#xA;&#x9;a.pos AS ordering_position&#xA;FROM&#xA;&#x9;(t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;LEFT OUTER JOIN t_attributetag AT ON&#xA;&#x9;(a.id = at.elementid&#xA;&#x9;&#x9;AND at.property = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;o.object_id = #CurrentElementID#&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid AS CLASSGUID,&#xA;&#x9;'AssociationEnd' AS CLASSTYPE,&#xA;&#x9;'t_connector' AS CLASSTABLE,&#xA;&#x9;o_start.name AS classifier_name,&#xA;&#x9;c.destrole AS property,&#xA;&#x9;tv.notes AS sequenceNumber,&#xA;&#x9;NULL&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;LEFT OUTER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;o_start.object_id = #CurrentElementID#&#xA;&#x9;AND c.connector_type IN ('Association', 'Aggregation')&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.notes,&#xA;&#x9;NULL&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;LEFT OUTER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;o_end.object_id = #CurrentElementID#&#xA;&#x9;AND c.connector_type IN ('Association', 'Aggregation')&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')&#xA;ORDER BY&#xA;&#x9;classifier_name,&#xA;&#x9;sequenceNumber,&#xA;&#x9;ordering_position,&#xA;&#x9;property;&#xA;#DB=COMMENT# Find the sequence numbers (tagged value sequenceNumber) of all properties of the classifier selected in the project browser, ordered by (1) sequence number, (2) by ordering position (that is, if the sequence number is not available, and this information is only available for attributes) and (3) by property name. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="sequence_numbers_package"
+           GUID="{53B8BEFD-51AE-46c5-B57C-63F9FB25E351}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT&#xA;&#x9;a.ea_guid AS CLASSGUID,&#xA;&#x9;'Attribute' AS CLASSTYPE,&#xA;&#x9;NULL AS CLASSTABLE,&#xA;&#x9;o.name AS classifier_name,&#xA;&#x9;a.name AS property,&#xA;&#x9;at.value AS sequenceNumber,&#xA;&#x9;a.pos AS ordering_position&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;o.object_id = a.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id)&#xA;LEFT OUTER JOIN t_attributetag AT ON&#xA;&#x9;(a.id = at.elementid&#xA;&#x9;&#x9;AND at.property = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o.object_type IN ('Class', 'DataType', 'Interface')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_start.name,&#xA;&#x9;c.destrole,&#xA;&#x9;tv.notes,&#xA;&#x9;NULL&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;LEFT OUTER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_TARGET'&#xA;&#x9;&#x9;AND tv.tagvalue = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')&#xA;UNION ALL&#xA;SELECT&#xA;&#x9;c.ea_guid,&#xA;&#x9;'AssociationEnd',&#xA;&#x9;'t_connector',&#xA;&#x9;o_end.name,&#xA;&#x9;c.sourcerole,&#xA;&#x9;tv.notes,&#xA;&#x9;NULL&#xA;FROM&#xA;&#x9;((t_connector c&#xA;INNER JOIN t_object o_start ON&#xA;&#x9;c.start_object_id = o_start.object_id)&#xA;INNER JOIN t_object o_end ON&#xA;&#x9;c.end_object_id = o_end.object_id)&#xA;LEFT OUTER JOIN t_taggedvalue tv ON&#xA;&#x9;(tv.elementid = c.ea_guid&#xA;&#x9;&#x9;AND tv.baseclass = 'ASSOCIATION_SOURCE'&#xA;&#x9;&#x9;AND tv.tagvalue = 'sequenceNumber')&#xA;WHERE&#xA;&#x9;((o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;AND o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation'))&#xA;&#x9;&#x9;OR (o_start.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND (c.connector_type = 'Association'&#xA;&#x9;&#x9;&#x9;&#x9;OR (c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;AND c.subtype = 'Weak')))&#xA;&#x9;&#x9;OR (o_end.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type = 'Aggregation'&#xA;&#x9;&#x9;&#x9;AND c.subtype = 'Strong'))&#xA;&#x9;AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')&#xA;ORDER BY&#xA;&#x9;classifier_name,&#xA;&#x9;sequenceNumber,&#xA;&#x9;ordering_position,&#xA;&#x9;property;&#xA;#DB=COMMENT# Find the sequence numbers (tagged value sequenceNumber) of all properties of all classifiers in the package selected in the project browser, ordered (1) by classifier name, (2) by sequence number, (3) by ordering position (that is, if the sequence number is not available, and this information is only available for attributes) and (4) by property name #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+</RootSearch>
