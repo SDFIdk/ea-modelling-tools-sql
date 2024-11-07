@@ -38,7 +38,7 @@
 
     <xsl:variable
         name="highlightjsVersion"
-        select="'11.7.0'" />
+        select="'11.9.0'" />
 
     <xsl:variable
         name="highlightjsStyle"
@@ -53,7 +53,8 @@
                 <title>
                     <xsl:value-of select="$title" />
                 </title>
-                <style>html{font-family: sans-serif;}pre{width: max-content;tab-size: 4;}main{max-width:960px; margin: auto;}</style>
+                <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
+                <style>body{grid-template-columns: 0fr 40% 0fr;place-content: center;font-size: 1rem;}pre{tab-size: 4;}</style>
                 <link rel="stylesheet">
                     <xsl:attribute name="href">
                         <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/styles/', $highlightjsStyle, '.min.css')" />
