@@ -2,8 +2,9 @@
    <head>
       <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
       <title>EA Modelling Tools SQL</title>
-      <style>html{font-family: sans-serif;}pre{width: max-content;tab-size: 4;}main{max-width:960px; margin: auto;}</style>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/idea.min.css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/sql.min.js"></script><script>hljs.highlightAll();</script></head>
+      <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css"/>
+      <style>body{grid-template-columns: 0fr 40% 0fr;place-content: center;font-size: 1rem;}pre{tab-size: 4;}</style>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/idea.min.css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script><script>hljs.highlightAll();</script></head>
    <body>
       <main>
          <h1>EA Modelling Tools SQL</h1>
@@ -224,6 +225,8 @@
             <li>associations (<a href="#id_AF887E0E-D7C7-4258-89E8-77705B195658" aria-label="See details for search associations" title="See details for search associations">see search details</a>)</li>
             <li>associations_unspecified_direction (<a href="#id_29C77169-F460-4a6f-ABF6-4301C00A9114" aria-label="See details for search associations_unspecified_direction" title="See details for search associations_unspecified_direction">see search details</a>)</li>
             <li>attributes_of_enumerations (<a href="#id_D62774DC-423F-47fe-9DCF-27A4D0010C6C" aria-label="See details for search attributes_of_enumerations" title="See details for search attributes_of_enumerations">see search details</a>)</li>
+            <li>attributes_size_precision_scale (<a href="#id_AA5976AE-0569-4eb8-95BD-6E737911EFBA" aria-label="See details for search attributes_size_precision_scale" title="See details for search attributes_size_precision_scale">see search details</a>)</li>
+            <li>attributes_size_precision_scale_export (<a href="#id_570DEBED-5247-4a74-9D83-3FDCD15C4BCC" aria-label="See details for search attributes_size_precision_scale_export" title="See details for search attributes_size_precision_scale_export">see search details</a>)</li>
             <li>attributes_with_conflicting_type (<a href="#id_E66A6DD7-0140-4105-876D-7527306A28B1" aria-label="See details for search attributes_with_conflicting_type" title="See details for search attributes_with_conflicting_type">see search details</a>)</li>
             <li>attributes_with_name_like (<a href="#id_157E9A64-26FE-40c4-A796-D941F1CE9E61" aria-label="See details for search attributes_with_name_like" title="See details for search attributes_with_name_like">see search details</a>)</li>
             <li>attributes_with_type_like (<a href="#id_E74601A1-84F4-434d-A07F-9A552EB328C5" aria-label="See details for search attributes_with_type_like" title="See details for search attributes_with_type_like">see search details</a>)</li>
@@ -269,6 +272,7 @@
             <li>scripts_and_scriptsgroups_with_scriptgroupname_like (<a href="#id_43546C28-DA6E-4285-A2B6-4ED16643F995" aria-label="See details for search scripts_and_scriptsgroups_with_scriptgroupname_like" title="See details for search scripts_and_scriptsgroups_with_scriptgroupname_like">see search details</a>)</li>
             <li>sequence_numbers_classifier (<a href="#id_EF9F67A0-0C04-4e6f-B7F3-42263D659E43" aria-label="See details for search sequence_numbers_classifier" title="See details for search sequence_numbers_classifier">see search details</a>)</li>
             <li>sequence_numbers_package (<a href="#id_53B8BEFD-51AE-46c5-B57C-63F9FB25E351" aria-label="See details for search sequence_numbers_package" title="See details for search sequence_numbers_package">see search details</a>)</li>
+            <li>tags_in_model (<a href="#id_733A0DE6-8A15-4472-89AA-6C87921BCCF1" aria-label="See details for search tags_in_model" title="See details for search tags_in_model">see search details</a>)</li>
          </ol>
          <h3 id="id_71E5285F-E21B-4b05-BFC2-8C4A1EDD92BD">all_attributes_classifier</h3>
          <p> Find the owned and inherited attributes of the classifier selected in the Project
@@ -425,6 +429,107 @@ WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type = 'Enumeration'
 	AND instr(a.styleex, 'IsLiteral=1') = 0;
+</code></pre>
+         <h3 id="id_AA5976AE-0569-4eb8-95BD-6E737911EFBA">attributes_size_precision_scale</h3>
+         <p> Finds all the attributes, including their values for tags size, precision and scale,
+            that have one of the following as type: CharacterString, Decimal, Integer, Measure,
+            Area, Length </p>
+         <pre><code class="language-sql">SELECT
+	a.ea_guid AS CLASSGUID,
+	'Attribute' AS CLASSTYPE,
+	p.name AS package_name,
+	o.name AS classifier_name,
+	a.name AS attribute_name,
+	a.type AS type_name,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'size') AS size,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'precision') AS precision,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'scale') AS scale
+FROM
+		((t_attribute a
+INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+WHERE
+		o.package_id IN (#Branch#)
+	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.type in ('CharacterString', 'Decimal', 'Integer', 'Measure', 'Area', 'Length');
+</code></pre>
+         <h3 id="id_570DEBED-5247-4a74-9D83-3FDCD15C4BCC">attributes_size_precision_scale_export</h3>
+         <p> Finds all the attributes, including their values for tags size, precision and scale,
+            that have one of the following as type: CharacterString, Decimal, Integer, Measure,
+            Area, Length. This query can be used as the starting point for a CSV file to import
+            with script import-data-model-custom-tags (EA Modelling Tools JavaScript): use the
+            "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
+            paste in LibreOffice Calc, modify as needed and save as a CSV file. </p>
+         <pre><code class="language-sql">SELECT
+	a.ea_guid AS CLASSGUID,
+	a.ea_guid AS GUID,
+	a.Name AS "UML-NAVN",
+	o.Name AS NAMESPACE,
+	'Attribute' AS CLASSTYPE,
+	CASE
+		WHEN instr(a.styleex, 'IsLiteral=1') = 0 THEN 'ATTRIBUTE'
+		ELSE 'ENUMERATION_LITERAL'
+	END AS "TYPE",
+	NULL AS CLASSTABLE,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'size') AS size,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'precision') AS precision,
+	(
+	SELECT
+			at.value
+	FROM
+			t_attributetag at
+	WHERE
+			a.id = at.elementid
+		AND at.property = 'scale') AS scale
+FROM
+		((t_attribute a
+INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+WHERE
+		o.package_id IN (#Branch#)
+	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.type in ('CharacterString', 'Decimal', 'Integer', 'Measure', 'Area', 'Length');
 </code></pre>
          <h3 id="id_E66A6DD7-0140-4105-876D-7527306A28B1">attributes_with_conflicting_type</h3>
          <p> Find the attributes that have a conflicting type, where the name of the attribute
@@ -2505,107 +2610,107 @@ ORDER BY
          <p> Finds all classifiers and properties with the given tagged value. Works currently
             only for tagged values that are not of the memo type. </p>
          <pre><code class="language-sql">SELECT
-	o.ea_guid AS CLASSGUID,
-	o.object_type AS CLASSTYPE,
-	NULL AS CLASSTABLE,
+    o.ea_guid AS CLASSGUID,
+    o.object_type AS CLASSTYPE,
+    NULL AS CLASSTABLE,
 	o.Name AS Name,
-	o.name AS classifier,
-	NULL AS property,
-	op.value AS tagged_value
+    o.name AS classifier,
+    NULL AS property,
+    op.value AS tagged_value
 FROM
-	t_object o
+    t_object o
 INNER JOIN t_objectproperties op ON
-	op.object_id = o.object_id
+    op.object_id = o.object_id
 WHERE
-	o.package_id IN (#Branch#)
-	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND op.property = ('&lt;Search Term&gt;')
+    o.package_id IN (#Branch#)
+    AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+    AND op.property = ('&lt;Search Term&gt;')
 UNION ALL
 SELECT
-	a.ea_guid,
-	'Attribute',
-	NULL,
+    a.ea_guid,
+    'Attribute',
+    NULL,
 	a.Name,
-	o.name,
-	a.name,
-	at.value
+    o.name,
+    a.name,
+    at.value
 FROM
-	((t_attribute a
+    ((t_attribute a
 INNER JOIN t_object o ON
-	o.object_id = a.object_id)
+    o.object_id = a.object_id)
 INNER JOIN t_package p ON
-	p.package_id = o.package_id)
+    p.package_id = o.package_id)
 INNER JOIN t_attributetag AT ON
-	(a.id = at.elementid
-		AND at.property = '&lt;Search Term&gt;')
+    (a.id = at.elementid
+        AND at.property = '&lt;Search Term&gt;')
 WHERE
-	o.package_id IN (#Branch#)
-	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+    o.package_id IN (#Branch#)
+    AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
 UNION ALL
 SELECT
-	c.ea_guid,
-	'AssociationEnd',
-	't_connector',
+    c.ea_guid,
+    'AssociationEnd',
+    't_connector',
 	c.destrole,
-	o_start.name,
-	c.destrole,
-	tv.notes
+    o_start.name,
+    c.destrole,
+    tv.notes
 FROM
-	((t_connector c
+    ((t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+    c.start_object_id = o_start.object_id)
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
+    c.end_object_id = o_end.object_id)
 INNER JOIN t_taggedvalue tv ON
-	(tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = '&lt;Search Term&gt;')
+    (tv.elementid = c.ea_guid
+        AND tv.baseclass = 'ASSOCIATION_TARGET'
+        AND tv.tagvalue = '&lt;Search Term&gt;')
 WHERE
-	((o_start.package_id IN (#Branch#)
-		AND o_end.package_id IN (#Branch#)
-			AND c.connector_type IN ('Association', 'Aggregation'))
-		OR (o_start.package_id IN (#Branch#)
-			AND (c.connector_type = 'Association'
-				OR (c.connector_type = 'Aggregation'
-					AND c.subtype = 'Weak')))
-		OR (o_end.package_id IN (#Branch#)
-			AND c.connector_type = 'Aggregation'
-			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+    ((o_start.package_id IN (#Branch#)
+        AND o_end.package_id IN (#Branch#)
+            AND c.connector_type IN ('Association', 'Aggregation'))
+        OR (o_start.package_id IN (#Branch#)
+            AND (c.connector_type = 'Association'
+                OR (c.connector_type = 'Aggregation'
+                    AND c.subtype = 'Weak')))
+        OR (o_end.package_id IN (#Branch#)
+            AND c.connector_type = 'Aggregation'
+            AND c.subtype = 'Strong'))
+    AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
 UNION ALL
 SELECT
-	c.ea_guid,
-	'AssociationEnd',
-	't_connector',
+    c.ea_guid,
+    'AssociationEnd',
+    't_connector',
 	c.sourcerole,
-	o_end.name,
-	c.sourcerole,
-	tv.notes
+    o_end.name,
+    c.sourcerole,
+    tv.notes
 FROM
-	((t_connector c
+    ((t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+    c.start_object_id = o_start.object_id)
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
+    c.end_object_id = o_end.object_id)
 INNER JOIN t_taggedvalue tv ON
-	(tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = '&lt;Search Term&gt;')
+    (tv.elementid = c.ea_guid
+        AND tv.baseclass = 'ASSOCIATION_SOURCE'
+        AND tv.tagvalue = '&lt;Search Term&gt;')
 WHERE
-	((o_start.package_id IN (#Branch#)
-		AND o_end.package_id IN (#Branch#)
-			AND c.connector_type IN ('Association', 'Aggregation'))
-		OR (o_start.package_id IN (#Branch#)
-			AND (c.connector_type = 'Association'
-				OR (c.connector_type = 'Aggregation'
-					AND c.subtype = 'Weak')))
-		OR (o_end.package_id IN (#Branch#)
-			AND c.connector_type = 'Aggregation'
-			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+    ((o_start.package_id IN (#Branch#)
+        AND o_end.package_id IN (#Branch#)
+            AND c.connector_type IN ('Association', 'Aggregation'))
+        OR (o_start.package_id IN (#Branch#)
+            AND (c.connector_type = 'Association'
+                OR (c.connector_type = 'Aggregation'
+                    AND c.subtype = 'Weak')))
+        OR (o_end.package_id IN (#Branch#)
+            AND c.connector_type = 'Aggregation'
+            AND c.subtype = 'Strong'))
+    AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
 ORDER BY
-	classifier,
-	property;
+    classifier,
+    property;
 </code></pre>
          <h3 id="id_2229F872-F775-46bd-8E46-47C4D7C5081A">model_elements_tagged_value_export</h3>
          <p> Finds all classifiers, properties, enumeration literals and connectors with the given
@@ -3381,6 +3486,112 @@ ORDER BY
 	sequenceNumber,
 	ordering_position,
 	property;
+</code></pre>
+         <h3 id="id_733A0DE6-8A15-4472-89AA-6C87921BCCF1">tags_in_model</h3>
+         <p> Finds all tags that are in use in the selected package. The tags on the package itself
+            are taken into account as well. </p>
+         <pre><code class="language-sql">SELECT
+	DISTINCT op.property AS tag
+FROM
+	t_objectproperties op
+INNER JOIN t_object o ON
+	op.object_id = o.object_id
+INNER JOIN 
+	t_package p
+ON
+	p.ea_guid = o.ea_guid
+WHERE
+	p.package_id IN (#Branch#)
+UNION
+SELECT
+	DISTINCT op.property
+FROM
+	t_objectproperties op
+INNER JOIN t_object o ON
+	op.object_id = o.object_id
+INNER JOIN t_package p ON
+	o.package_id = p.package_id
+WHERE
+	o.package_id IN (#Branch#)
+UNION
+SELECT
+	DISTINCT at.property
+FROM
+	t_attributetag AT
+INNER JOIN t_attribute a ON
+	at.elementid = a.id
+INNER JOIN t_object o ON
+	a.object_id = o.object_id
+WHERE
+	o.package_id IN (#Branch#)
+UNION	
+SELECT
+	DISTINCT tv.tagvalue
+FROM
+	t_taggedvalue tv
+INNER JOIN t_connector c ON
+	tv.elementid = c.ea_guid
+INNER JOIN t_object o_start ON
+	c.start_object_id = o_start.object_id
+INNER JOIN t_object o_end ON
+	c.end_object_id = o_end.object_id
+WHERE
+	((o_start.package_id IN (#Branch#)
+		AND o_end.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation'))
+		OR (o_start.package_id IN (#Branch#)
+			AND (c.connector_type = 'Association'
+				OR (c.connector_type = 'Aggregation'
+					AND c.subtype = 'Weak')))
+		OR (o_end.package_id IN (#Branch#)
+			AND c.connector_type = 'Aggregation'
+			AND c.subtype = 'Strong'))
+UNION	
+SELECT
+	DISTINCT tv.tagvalue
+FROM
+	t_taggedvalue tv
+INNER JOIN t_connector c ON
+	tv.elementid = c.ea_guid
+INNER JOIN t_object o_start ON
+	c.start_object_id = o_start.object_id
+INNER JOIN t_object o_end ON
+	c.end_object_id = o_end.object_id
+WHERE
+	((o_start.package_id IN (#Branch#)
+		AND o_end.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation'))
+		OR (o_start.package_id IN (#Branch#)
+			AND (c.connector_type = 'Association'
+				OR (c.connector_type = 'Aggregation'
+					AND c.subtype = 'Weak')))
+		OR (o_end.package_id IN (#Branch#)
+			AND c.connector_type = 'Aggregation'
+			AND c.subtype = 'Strong'))
+UNION
+SELECT
+	DISTINCT ct.value
+FROM
+	t_connectortag ct
+INNER JOIN t_connector c ON
+	ct.elementid = c.connector_id
+INNER JOIN t_object o_start ON
+	c.start_object_id = o_start.object_id
+INNER JOIN t_object o_end ON
+	c.end_object_id = o_end.object_id
+WHERE
+	((o_start.package_id IN (#Branch#)
+		AND o_end.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation'))
+		OR (o_start.package_id IN (#Branch#)
+			AND (c.connector_type = 'Association'
+				OR (c.connector_type = 'Aggregation'
+					AND c.subtype = 'Weak')))
+		OR (o_end.package_id IN (#Branch#)
+			AND c.connector_type = 'Aggregation'
+			AND c.subtype = 'Strong'))
+ORDER BY
+	1;
 </code></pre>
       </main>
    </body>
