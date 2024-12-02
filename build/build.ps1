@@ -33,5 +33,5 @@ Copy-Item $currentDirectory\src\modelviews\modelviews.xml -Destination $currentD
 (Get-Item $currentDirectory\target\ea_modelviews.xml).LastWriteTime = (Get-Date)
 (Get-Item $currentDirectory\target\ea_modelviews.xml).CreationTime = (Get-Date)
 Write-Host "INFO Building documentation"
-java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\create_mdg_documentation.xsl -s:target\$mdgFileName -it:"start-template" -o:target\ea_search_doc.xhtml folderPath=$currentDirectory\src mdgFileName=$mdgFileName searchesFileName=$searchesFileName viewsFileName=$viewsFileName
+java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\create_mdg_documentation.xsl -s:target\$mdgFileName -it:"start-template" -o:target\index.html folderPath=$currentDirectory\src mdgFileName=$mdgFileName searchesFileName=$searchesFileName viewsFileName=$viewsFileName
 Write-Host "INFO Finished"

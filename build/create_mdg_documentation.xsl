@@ -8,10 +8,12 @@
     
     <!-- Create HTML documentation for the searches -->
 
+    <!-- Set output method to html and not to xhtml,
+    as the scripts from designsystem.js possibly not always generate XHTML (e.g. use of br-tag). -->
     <xsl:output
-        method="xhtml"
+        method="html"
         html-version="5.0"
-        include-content-type="yes"
+        include-content-type="no"
         omit-xml-declaration="yes"
         indent="yes" />
 
@@ -46,15 +48,31 @@
 
     <!-- Start template. -->
     <xsl:template name="start-template">
-        <html
-            xmlns="http://www.w3.org/1999/xhtml"
-            lang="en">
+        <html lang="en">
             <head>
                 <title>
                     <xsl:value-of select="$title" />
                 </title>
-                <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" />
-                <style>body{grid-template-columns: 0fr 40% 0fr;place-content: center;font-size: 1rem;}pre{tab-size: 4;}</style>
+                <meta charset="utf-8"/>
+                <link rel="stylesheet" href="https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.css" />
+                <style>
+                <![CDATA[
+                section {
+                  margin-top: var(--space-lg);
+                  margin-bottom: var(--space-lg);
+                pre>code.hljs {
+                  background-color: var(--code-background-color);
+                }
+                }]]>
+                </style>
+                <script type="module">
+                <![CDATA[import {
+                    DSLogo,
+                    DSLogoTitle
+                } from 'https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.js'
+                customElements.define('ds-logo', DSLogo)
+                customElements.define('ds-logo-title', DSLogoTitle)]]>
+                </script>
                 <link rel="stylesheet">
                     <xsl:attribute name="href">
                         <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/styles/', $highlightjsStyle, '.min.css')" />
@@ -73,66 +91,88 @@
                 <script>hljs.highlightAll();</script>
             </head>
             <body>
+                <header class="ds-header">
+                    <div class="ds-container">
+                        <ds-logo-title byline="Agency for Climate Data">
+                            <xsl:attribute name="title" select="$title" />
+                        </ds-logo-title>
+                        <h1>
+                            <xsl:value-of select="$title" />
+                        </h1>
+                        <p class="manchet">
+                            <xsl:value-of select="'Version ' || /MDG.Technology/Documentation/@version" />
+                        </p>
+                    </div>
+                </header>
                 <main>
-                    <h1>
-                        <xsl:value-of select="$title" />
-                    </h1>
-                    <h2>Introduction</h2>
-                    <p>
-                        <xsl:text>This page gives an overview of all the model searches and model views defined in </xsl:text>
-                        <xsl:value-of select="$title" />
-                        <xsl:text>. They can be downloaded for import as</xsl:text>
-                        <ul>
-                            <li>
-                                <a>
-                                    <xsl:attribute name="href">
-                                        <xsl:value-of select="concat('./', $mdgFileName)" />
-                                    </xsl:attribute>
-                                    <xsl:text>non-editable model searches and model views, as part of an MDG</xsl:text>
-                                </a>
-                                <xsl:text> (available in the "</xsl:text>
+                    <div class="ds-container">
+                        <section>
+                            <h2>Introduction</h2>
+                            <p>
+                                <xsl:text>This page gives an overview of all the model searches and model views defined in </xsl:text>
+                                <a href="https://sparxsystems.com/eahelp/search_view.html" target="_blank">model searches</a>
+                                <xsl:text> and </xsl:text>
+                                <a href="https://sparxsystems.com/eahelp/model_views.html" target="_blank">model views</a>
+                                <xsl:text> defined in </xsl:text>
                                 <xsl:value-of select="$title" />
-                                <xsl:text>" search category in the Find in Project window and in the "</xsl:text>
-                                <xsl:value-of select="$title" />
-                                <xsl:text> Views" root node in the Model Views window, respectively)</xsl:text>
-                            </li>
-                            <li>
-                                <a>
-                                    <xsl:attribute name="href">
-                                        <xsl:value-of select="concat('./', $searchesFileName)" />
-                                    </xsl:attribute>
-                                    <xsl:text>editable model searches</xsl:text>
-                                </a>
-                                <xsl:text> (available in the "My Searches" search category in the Find in Project window)</xsl:text>
-                            </li>
-                            <li>
-                                <a>
-                                    <xsl:attribute name="href">
-                                        <xsl:value-of select="concat('./', $viewsFileName)" />
-                                    </xsl:attribute>
-                                    <xsl:text>editable model views</xsl:text>
-                                </a>
-                                <xsl:text> (available in the root node "</xsl:text>
-                                <xsl:value-of select="$title" />
-                                <xsl:text>" in the Model Views window)</xsl:text>
-                            </li>
-                        </ul>
-                    </p>
-                    <h2>Model views</h2>
-                    <xsl:apply-templates select="/MDG.Technology/ModelViews/RootView/Category" />
-                    <h2>Model searches</h2>
-                    <ol>
-                        <xsl:apply-templates
-                            select="/MDG.Technology/ModelSearches/Search"
-                            mode="overview">
-                            <xsl:sort select="@Name" />
-                        </xsl:apply-templates>
-                    </ol>
-                    <xsl:apply-templates
-                        select="/MDG.Technology/ModelSearches/Search"
-                        mode="details">
-                        <xsl:sort select="@Name" />
-                    </xsl:apply-templates>
+                                <xsl:text>. They can be downloaded for import as</xsl:text>
+                                <ul>
+                                    <li>
+                                        <a>
+                                            <xsl:attribute name="href">
+                                                <xsl:value-of select="concat('./', $mdgFileName)" />
+                                            </xsl:attribute>
+                                            <xsl:text>non-editable model searches and model views, as part of an MDG</xsl:text>
+                                        </a>
+                                        <xsl:text> (available in the "</xsl:text>
+                                        <xsl:value-of select="$title" />
+                                        <xsl:text>" search category in the Find in Project window and in the "</xsl:text>
+                                        <xsl:value-of select="$title" />
+                                        <xsl:text> Views" root node in the Model Views window, respectively)</xsl:text>
+                                    </li>
+                                    <li>
+                                        <a>
+                                            <xsl:attribute name="href">
+                                                <xsl:value-of select="concat('./', $searchesFileName)" />
+                                            </xsl:attribute>
+                                            <xsl:text>editable model searches</xsl:text>
+                                        </a>
+                                        <xsl:text> (available in the "My Searches" search category in the Find in Project window)</xsl:text>
+                                    </li>
+                                    <li>
+                                        <a>
+                                            <xsl:attribute name="href">
+                                                <xsl:value-of select="concat('./', $viewsFileName)" />
+                                            </xsl:attribute>
+                                            <xsl:text>editable model views</xsl:text>
+                                        </a>
+                                        <xsl:text> (available in the root node "</xsl:text>
+                                        <xsl:value-of select="$title" />
+                                        <xsl:text>" in the Model Views window)</xsl:text>
+                                    </li>
+                                </ul>
+                            </p>
+                        </section>
+                        <section>
+                            <h2>Model views</h2>
+                            <xsl:apply-templates select="/MDG.Technology/ModelViews/RootView/Category" />
+                        </section>
+                        <section>
+                            <h2>Model searches</h2>
+                            <ol>
+                                <xsl:apply-templates
+                                    select="/MDG.Technology/ModelSearches/Search"
+                                    mode="overview">
+                                    <xsl:sort select="@Name" />
+                                </xsl:apply-templates>
+                            </ol>
+                            <xsl:apply-templates
+                                select="/MDG.Technology/ModelSearches/Search"
+                                mode="details">
+                                <xsl:sort select="@Name" />
+                            </xsl:apply-templates>
+                        </section>
+                    </div>
                 </main>
             </body>
         </html>
@@ -140,24 +180,26 @@
     
     <!-- Extract the model view categories. -->
     <xsl:template match="Category">
-        <h3>
-            <xsl:attribute name="id">
-                <xsl:value-of select="concat('id_', substring(@ID, 2, 36))" />
-            </xsl:attribute>
-            <xsl:value-of select="@Name" />
-        </h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Search</th>
-                    <th>Search term</th>
-                </tr>
-            </thead>
-            <tbody>
-                <xsl:apply-templates select="Search" />
-            </tbody>
-        </table>
+        <section>
+            <h3>
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat('id_', substring(@ID, 2, 36))" />
+                </xsl:attribute>
+                <xsl:value-of select="@Name" />
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Search</th>
+                        <th>Search term</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <xsl:apply-templates select="Search" />
+                </tbody>
+            </table>
+        </section>
     </xsl:template>
 
     <!-- Create a table showing the searches contained in a category. -->
@@ -237,31 +279,33 @@
     <xsl:template
         match="ModelSearches/Search"
         mode="details">
-        <h3>
-            <xsl:attribute name="id">
-                <xsl:value-of select="concat('id_', substring(@GUID, 2, 36))" />
-            </xsl:attribute>
-            <xsl:value-of select="@Name" />
-        </h3>
-        <xsl:variable
-            name="savedSqlQuery"
-            select="SrchOn/RootTable/@Filter" />
-        <p>
-            <xsl:if test="contains($savedSqlQuery, $commentDelimiter)">
-                <xsl:value-of select="substring-before(substring-after($savedSqlQuery, $commentDelimiter), $commentDelimiter)" />
-            </xsl:if>
-        </p>
-        <pre>
-            <code class="language-sql">
-                <xsl:choose>
-                    <xsl:when test="contains($savedSqlQuery, $commentDelimiter)">
-                        <xsl:value-of select="substring-before($savedSqlQuery, $commentDelimiter)" />
-                    </xsl:when>
-                    <xsl:otherwise>
-                        <xsl:value-of select="$savedSqlQuery" />
-                    </xsl:otherwise>
-                </xsl:choose>
-            </code>
-        </pre>
+        <section>
+            <h3>
+                <xsl:attribute name="id">
+                    <xsl:value-of select="concat('id_', substring(@GUID, 2, 36))" />
+                </xsl:attribute>
+                <xsl:value-of select="@Name" />
+            </h3>
+            <xsl:variable
+                name="savedSqlQuery"
+                select="SrchOn/RootTable/@Filter" />
+            <p>
+                <xsl:if test="contains($savedSqlQuery, $commentDelimiter)">
+                    <xsl:value-of select="substring-before(substring-after($savedSqlQuery, $commentDelimiter), $commentDelimiter)" />
+                </xsl:if>
+            </p>
+            <pre data-theme="light">
+                <code class="language-sql">
+                    <xsl:choose>
+                        <xsl:when test="contains($savedSqlQuery, $commentDelimiter)">
+                            <xsl:value-of select="substring-before($savedSqlQuery, $commentDelimiter)" />
+                        </xsl:when>
+                        <xsl:otherwise>
+                            <xsl:value-of select="$savedSqlQuery" />
+                        </xsl:otherwise>
+                    </xsl:choose>
+                </code>
+            </pre>
+        </section>
     </xsl:template>
 </xsl:stylesheet>
