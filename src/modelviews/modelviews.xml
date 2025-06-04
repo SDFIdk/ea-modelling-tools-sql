@@ -1,7 +1,7 @@
 <?xml  version='1.0' encoding='UTF-8' ?>
 <Views>
     <RootView Name="EA Modelling Tools SQL" ID="{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}">
-        <Category NType="7" Name="SDFI Core rules" ID="{A6473619-0E44-4374-886A-B0BF11302192}" Pos="0">
+        <Category NType="7" Name="Core rules" ID="{A6473619-0E44-4374-886A-B0BF11302192}" Pos="0">
             <Search SrchID="{FD34C919-C09E-434c-BA0F-0EA32C757B20}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="attributes and enumeration literals with stereotype enum" ID="{5CC2562A-D8C2-451b-B763-C3AEAB404B64}" Pos="0"/>
             <Search SrchID="{D62774DC-423F-47fe-9DCF-27A4D0010C6C}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="attributes of enumerations" ID="{E2910255-3868-4f08-926A-DB89D949E6A8}" Pos="0"/>
             <Search SrchID="{E66A6DD7-0140-4105-876D-7527306A28B1}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="attributes where the type name does not match the type id" ID="{50F82D94-2515-45b0-B0E6-DD48871126C0}" Pos="0"/>
@@ -28,13 +28,13 @@
             <Search SrchID="{0D3721D9-3668-4cb3-A4A0-49F5E82D7A21}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="packages, classifiers, attributes and enumeration literals with duplicate tags" ID="{15827512-0612-4a32-8364-14F709EC6291}" Pos="0"/>
             <Search SrchID="{F97DC480-B755-41d6-BD9C-611E4B9CB281}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="packages, classifiers, attributes and enumeration literals with notes" ID="{0A97848D-8F31-4259-A051-4B344E73579C}" Pos="0"/>
         </Category>
-        <Category NType="7" Name="SDFI Diagram rules for models in Danish" ID="{33E258A9-AB30-4f2a-A736-794F6A6B44C6}" Pos="0">
+        <Category NType="7" Name="Diagram rules for models in Danish" ID="{33E258A9-AB30-4f2a-A736-794F6A6B44C6}" Pos="0">
             <Search SrchID="{4EFB024C-EA07-4c8a-A68F-EC1FFB18764A}" SrchTerm="Kontekstdiagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classes without context diagrams (Danish)" ID="{5698677E-C6AD-42e4-8AC7-DADC9762A422}" Pos="0"/>
             <Search SrchID="{9C568A9A-771B-45b8-957C-BC016455F994}" SrchTerm="Kontekstdiagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="context diagrams without central classifier (Danish)" ID="{1F1D161B-BC00-4ad3-B55D-251709E4D412}" Pos="0"/>
             <Search SrchID="{9BE287B7-E2E0-4db1-ADA0-6FA591597ED6}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (Danish)" ID="{EB809CA6-0388-4d8e-A5AD-839C47A01A0A}" Pos="0"/>
             <Search SrchID="{E8B2F87E-BE46-44a9-906B-4AC533900454}" SrchTerm="Pakkeafhængigheder" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="model without dependency diagram (Danish)" ID="{1EDDC640-173C-4e69-8AE6-CC187BBE50C7}" Pos="0"/>
         </Category>
-        <Category NType="7" Name="SDFI Diagram rules for models in English" ID="{527BC9C7-4EB1-4cc5-A267-AAE494D306EF}" Pos="0">
+        <Category NType="7" Name="Diagram rules for models in English" ID="{527BC9C7-4EB1-4cc5-A267-AAE494D306EF}" Pos="0">
             <Search SrchID="{4EFB024C-EA07-4c8a-A68F-EC1FFB18764A}" SrchTerm="Context diagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classes without context diagrams (English)" ID="{3DED1BED-12EB-4521-A725-037BA80C6652}" Pos="0"/>
             <Search SrchID="{9C568A9A-771B-45b8-957C-BC016455F994}" SrchTerm="Context diagram" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="context diagrams without central classifier (English)" ID="{E24ACD56-AF66-4f17-AA9D-4CC9A854804F}" Pos="0"/>
             <Search SrchID="{CE1FB2AF-49E3-4402-A446-844A105B6ADB}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (English)" ID="{930D9D7B-6E46-41e8-9883-9A0A8F4C775E}" Pos="0"/>

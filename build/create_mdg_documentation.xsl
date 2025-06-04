@@ -22,6 +22,10 @@
     <xsl:param name="searchesFileName" />
 
     <xsl:param name="viewsFileName" />
+    
+    <xsl:variable
+        name="creator"
+        select="'Agency for Climate Data'" />
 
     <xsl:variable
         name="title"
@@ -32,6 +36,18 @@
     <xsl:variable
         name="commentDelimiter"
         select="'#DB=COMMENT#'" />
+        
+    <xsl:variable
+        name="designsystemVersion"
+        select="'8'" />
+
+    <xsl:variable
+        name="designsystemUrl"
+        select="'https://cdn.dataforsyningen.dk/assets/designsystem/v' || $designsystemVersion" />
+        
+    <xsl:variable
+        name="exitSiteIcon"
+        select="document($designsystemUrl || '/icons/exitsite.svg')" />
 
     <!-- JavaScript library hightlight.js is used for highlighting the SQL syntax, see https://highlightjs.org/. -->
     <xsl:variable
@@ -40,7 +56,7 @@
 
     <xsl:variable
         name="highlightjsVersion"
-        select="'11.9.0'" />
+        select="'11.11.1'" />
 
     <xsl:variable
         name="highlightjsStyle"
@@ -48,134 +64,208 @@
 
     <!-- Start template. -->
     <xsl:template name="start-template">
-        <html lang="en">
-            <head>
-                <title>
-                    <xsl:value-of select="$title" />
-                </title>
-                <meta charset="utf-8"/>
-                <link rel="stylesheet" href="https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.css" />
-                <style>
-                <![CDATA[
-                section {
-                  margin-top: var(--space-lg);
-                  margin-bottom: var(--space-lg);
-                pre>code.hljs {
-                  background-color: var(--code-background-color);
-                }
-                }]]>
-                </style>
-                <script type="module">
-                <![CDATA[import {
-                    DSLogo,
-                    DSLogoTitle
-                } from 'https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.js'
-                customElements.define('ds-logo', DSLogo)
-                customElements.define('ds-logo-title', DSLogoTitle)]]>
-                </script>
-                <link rel="stylesheet">
-                    <xsl:attribute name="href">
-                        <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/styles/', $highlightjsStyle, '.min.css')" />
-                    </xsl:attribute>
-                </link>
-                <script>
-                    <xsl:attribute name="src">
-                        <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/highlight.min.js')" />
-                    </xsl:attribute>
-                </script>
-                <script>
-                    <xsl:attribute name="src">
-                        <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/languages/sql.min.js')" />
-                    </xsl:attribute>
-                </script>
-                <script>hljs.highlightAll();</script>
-            </head>
-            <body>
-                <header class="ds-header">
-                    <div class="ds-container">
-                        <ds-logo-title byline="Agency for Climate Data">
-                            <xsl:attribute name="title" select="$title" />
-                        </ds-logo-title>
-                        <h1>
-                            <xsl:value-of select="$title" />
-                        </h1>
-                        <p class="manchet">
-                            <xsl:value-of select="'Version ' || /MDG.Technology/Documentation/@version" />
-                        </p>
-                    </div>
-                </header>
-                <main>
-                    <div class="ds-container">
-                        <section>
-                            <h2>Introduction</h2>
-                            <p>
-                                <xsl:text>This page gives an overview of all the model searches and model views defined in </xsl:text>
-                                <a href="https://sparxsystems.com/eahelp/search_view.html" target="_blank">model searches</a>
-                                <xsl:text> and </xsl:text>
-                                <a href="https://sparxsystems.com/eahelp/model_views.html" target="_blank">model views</a>
-                                <xsl:text> defined in </xsl:text>
+        <xsl:document>
+            <html lang="en">
+                <head>
+                    <title>
+                        <xsl:value-of select="$title" />
+                    </title>
+                    <meta charset="utf-8" />
+                    <meta
+                        name="viewport"
+                        content="width=device-width, initial-scale=1.0" />
+                    <link rel="stylesheet">
+                        <xsl:attribute
+                            name="href"
+                            select="$designsystemUrl || '/designsystem.css'" />
+                    </link>
+                    <style>
+                        .grid-container{
+                            display: grid;
+                            gap: var(--gap);
+                            grid-template-columns: 1fr;
+                            height: auto;
+                            
+                            @media (min-width: 55rem) {
+                                grid-template-columns: 2fr 5fr;
+                                height: 100vh;
+                            }
+                        }
+                        #toc {
+                            grid-row: 1;
+                            grid-column: 1;
+                        }
+                        #text {
+                            grid-row: 2;
+                            grid-column: 1;
+                            @media (min-width: 55rem) {
+                                grid-row: 1;
+                                grid-column: 2;
+                            }
+                        }
+                        .grid-container>div{
+                            overflow-y: auto;
+                            @media (min-width: 55rem) {
+                                overflow-y: scroll;
+                            }
+                        }
+                        #toc>nav.ds-nav-vertical {
+                            margin-top: var(--space-md);
+                            text-wrap: wrap;
+                            word-break: break-all;
+                        }
+                        #toc>nav.ds-nav-vertical > *{
+                            border: none
+                        }
+                        #toc>nav.ds-nav-vertical a{
+                            padding: var(--space-sm)
+                        }
+                        section {
+                            margin-bottom: var(--space-lg);
+                        }
+                        pre>code.hljs {
+                            background-color: var(--code-background-color);
+                        }
+                    </style>
+                    <script type="module">
+                        import {
+                            DSLogo,
+                            DSLogoTitle
+                        } from
+                        <xsl:value-of select="' '' ' || $designsystemUrl || '/designsystem.js '' '" />
+                        customElements.define('ds-logo', DSLogo)
+                        customElements.define('ds-logo-title', DSLogoTitle)
+                    </script>
+                    <link rel="stylesheet">
+                        <xsl:attribute name="href">
+                            <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/styles/', $highlightjsStyle, '.min.css')" />
+                        </xsl:attribute>
+                    </link>
+                    <script>
+                        <xsl:attribute name="src">
+                            <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/highlight.min.js')" />
+                        </xsl:attribute>
+                    </script>
+                    <script>
+                        <xsl:attribute name="src">
+                            <xsl:value-of select="concat($highlightjsLocation, $highlightjsVersion, '/languages/sql.min.js')" />
+                        </xsl:attribute>
+                    </script>
+                    <script>hljs.highlightAll();</script>
+                </head>
+                <body>
+                    <header
+                        id="header"
+                        class="ds-header">
+                        <div class="ds-container">
+                            <ds-logo-title>
+                                <xsl:attribute name="byline" select="$creator" />
+                                <xsl:attribute name="title" select="$title" />
+                            </ds-logo-title>
+                            <h1>
                                 <xsl:value-of select="$title" />
-                                <xsl:text>. They can be downloaded for import as</xsl:text>
-                                <ul>
-                                    <li>
-                                        <a>
-                                            <xsl:attribute name="href">
-                                                <xsl:value-of select="concat('./', $mdgFileName)" />
-                                            </xsl:attribute>
-                                            <xsl:text>non-editable model searches and model views, as part of an MDG</xsl:text>
-                                        </a>
-                                        <xsl:text> (available in the "</xsl:text>
-                                        <xsl:value-of select="$title" />
-                                        <xsl:text>" search category in the Find in Project window and in the "</xsl:text>
-                                        <xsl:value-of select="$title" />
-                                        <xsl:text> Views" root node in the Model Views window, respectively)</xsl:text>
-                                    </li>
-                                    <li>
-                                        <a>
-                                            <xsl:attribute name="href">
-                                                <xsl:value-of select="concat('./', $searchesFileName)" />
-                                            </xsl:attribute>
-                                            <xsl:text>editable model searches</xsl:text>
-                                        </a>
-                                        <xsl:text> (available in the "My Searches" search category in the Find in Project window)</xsl:text>
-                                    </li>
-                                    <li>
-                                        <a>
-                                            <xsl:attribute name="href">
-                                                <xsl:value-of select="concat('./', $viewsFileName)" />
-                                            </xsl:attribute>
-                                            <xsl:text>editable model views</xsl:text>
-                                        </a>
-                                        <xsl:text> (available in the root node "</xsl:text>
-                                        <xsl:value-of select="$title" />
-                                        <xsl:text>" in the Model Views window)</xsl:text>
-                                    </li>
-                                </ul>
+                            </h1>
+                            <p class="manchet">
+                                <xsl:value-of select="'Version ' || /MDG.Technology/Documentation/@version" />
                             </p>
-                        </section>
-                        <section>
-                            <h2>Model views</h2>
-                            <xsl:apply-templates select="/MDG.Technology/ModelViews/RootView/Category" />
-                        </section>
-                        <section>
-                            <h2>Model searches</h2>
-                            <ol>
-                                <xsl:apply-templates
-                                    select="/MDG.Technology/ModelSearches/Search"
-                                    mode="overview">
-                                    <xsl:sort select="@Name" />
-                                </xsl:apply-templates>
-                            </ol>
-                            <xsl:apply-templates
-                                select="/MDG.Technology/ModelSearches/Search"
-                                mode="details">
-                                <xsl:sort select="@Name" />
-                            </xsl:apply-templates>
-                        </section>
+                        </div>
+                    </header>
+                    <div class="grid-container">
+                        <div
+                            id="toc"
+                            class="ds-padding">
+                            <nav class="ds-nav-vertical">
+                                <h2>Model searches overview</h2>
+                                <ol>
+                                    <xsl:apply-templates
+                                        select="/MDG.Technology/ModelSearches/Search"
+                                        mode="overview">
+                                        <xsl:sort select="@Name" />
+                                    </xsl:apply-templates>
+                                </ol>
+                            </nav>
+                        </div>
+                        <div id="text">
+                            <main>
+                                <div class="ds-container">
+                                    <section>
+                                        <h2>Introduction</h2>
+                                        <p>
+                                            <xsl:text>This page gives an overview of all the model searches and model views defined in </xsl:text>
+                                            <a
+                                                href="https://sparxsystems.com/eahelp/search_view.html"
+                                                target="_blank"
+                                                rel="noreferrer noopener">
+                                                model searches
+                                                <xsl:copy-of select="$exitSiteIcon" />
+                                            </a>
+                                            <xsl:text> and </xsl:text>
+                                            <a
+                                                href="https://sparxsystems.com/eahelp/model_views.html"
+                                                target="_blank"
+                                                rel="noreferrer noopener">
+                                                model views
+                                                <xsl:copy-of select="$exitSiteIcon" />
+                                            </a>
+                                            <xsl:text> defined in </xsl:text>
+                                            <xsl:value-of select="$title" />
+                                            <xsl:text>. They can be downloaded for import as</xsl:text>
+                                            <ul>
+                                                <li>
+                                                    <a>
+                                                        <xsl:attribute name="href">
+                                                            <xsl:value-of select="concat('./', $mdgFileName)" />
+                                                        </xsl:attribute>
+                                                        <xsl:text>non-editable model searches and model views, as part of an MDG</xsl:text>
+                                                    </a>
+                                                    <xsl:text> (available in the "</xsl:text>
+                                                    <xsl:value-of select="$title" />
+                                                    <xsl:text>" search category in the Find in Project window and in the "</xsl:text>
+                                                    <xsl:value-of select="$title" />
+                                                    <xsl:text> Views" root node in the Model Views window, respectively)</xsl:text>
+                                                </li>
+                                                <li>
+                                                    <a>
+                                                        <xsl:attribute name="href">
+                                                            <xsl:value-of select="concat('./', $searchesFileName)" />
+                                                        </xsl:attribute>
+                                                        <xsl:text>editable model searches</xsl:text>
+                                                    </a>
+                                                    <xsl:text> (available in the "My Searches" search category in the Find in Project window)</xsl:text>
+                                                </li>
+                                                <li>
+                                                    <a>
+                                                        <xsl:attribute name="href">
+                                                            <xsl:value-of select="concat('./', $viewsFileName)" />
+                                                        </xsl:attribute>
+                                                        <xsl:text>editable model views</xsl:text>
+                                                    </a>
+                                                    <xsl:text> (available in the root node "</xsl:text>
+                                                    <xsl:value-of select="$title" />
+                                                    <xsl:text>" in the Model Views window)</xsl:text>
+                                                </li>
+                                            </ul>
+                                        </p>
+                                    </section>
+                                    <section>
+                                        <h2>Model views</h2>
+                                        <xsl:apply-templates select="/MDG.Technology/ModelViews/RootView/Category" />
+                                    </section>
+                                    <section>
+                                        <h2>Model searches details</h2>
+                                        <xsl:apply-templates
+                                            select="/MDG.Technology/ModelSearches/Search"
+                                            mode="details">
+                                            <xsl:sort select="@Name" />
+                                        </xsl:apply-templates>
+                                    </section>
+                                </div>
+                            </main>
+                        </div>
                     </div>
-                </main>
-            </body>
-        </html>
+                </body>
+            </html>
+        </xsl:document>
     </xsl:template>
     
     <!-- Extract the model view categories. -->
@@ -249,29 +339,16 @@
         </tr>
     </xsl:template>
     
-    <!-- Extract the comment on the SQL query and the SQL query itself. -->
     <xsl:template
         match="ModelSearches/Search"
         mode="overview">
         <li>
-            <xsl:value-of select="@Name" />
-            <xsl:text> (</xsl:text>
             <a>
                 <xsl:attribute name="href">
                     <xsl:value-of select="concat('#', 'id_', substring(@GUID, 2, 36))" />
                 </xsl:attribute>
-                <xsl:variable
-                    name="info"
-                    select="concat('See details for search ', @Name)" />
-                <xsl:attribute name="aria-label">
-                    <xsl:value-of select="$info" />
-                </xsl:attribute>
-                <xsl:attribute name="title">
-                 <xsl:value-of select="$info" />
-                </xsl:attribute>
-                <xsl:value-of select="'see search details'" />
+                <xsl:value-of select="@Name" />
             </a>
-            <xsl:text>)</xsl:text>
         </li>
     </xsl:template>
 
