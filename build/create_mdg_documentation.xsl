@@ -152,6 +152,38 @@
                         </xsl:attribute>
                     </script>
                     <script>hljs.highlightAll();</script>
+                    <script type="module">
+                      // Make back/forward internal navigation with browser buttons work properly
+                      const toc = document.getElementById("toc");
+                      const text = document.getElementById("text");
+
+                      // Ensure history.state exists
+                      if (!history.state) {
+                        history.replaceState({ toc: 0, text: 0 }, "");
+                      }
+
+                      function saveState() {
+                        const state = {
+                          ...history.state,
+                          toc: toc.scrollTop,
+                          text: text.scrollTop
+                        };
+                        history.replaceState(state, "");
+                      }
+
+                      // Save scroll positions when user scrolls either column
+                      toc.addEventListener("scroll", saveState);
+                      text.addEventListener("scroll", saveState);
+
+                      // Restore positions on back/forward navigation
+                      window.addEventListener("popstate", (event) => {
+                        const state = event.state;
+                        if (state) {
+                          toc.scrollTop = state.toc || 0;
+                          text.scrollTop = state.text || 0;
+                        }
+                      });
+                    </script>
                 </head>
                 <body>
                     <header

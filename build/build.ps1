@@ -1,37 +1,72 @@
 # Windows PowerShell script to create the HTML file.
 # saxonJar is the location of the Saxon jar file
-param([Parameter(Mandatory=$true)] $mdgVersion)
+param(
+    [Parameter(Mandatory=$true)] [string]$MdgVersion
+)
 
-# change to unicode
-[console]::InputEncoding = [console]::OutputEncoding = New-Object System.Text.UTF8Encoding
+# change to UTF-8
+chcp 65001
 
-# Check whether SAXON_CP user environment variable is set
-if ([System.Environment]::GetEnvironmentVariable("SAXON_CP", [System.EnvironmentVariableTarget]::User) -eq $null) {
-    Write-Host "The user environment variable SAXON_CP is not set. Script will exit."
-    exit
+# Check whether SAXON_CP environment variable is set. SAXON_CP has to point to the main jar file in the Saxon distribution, see https://www.saxonica.com.
+if (-not $env:SAXON_CP) {
+    Write-Error "The environment variable SAXON_CP is not set. Script will exit."
+    exit 1
+} else {
+    Write-Host "SAXON_CP=$env:SAXON_CP"
 }
 
-$folder = "target"
-if (Test-Path $folder) {
-	Remove-Item -Recurse $folder
-    Write-Host "INFO Deleted folder "$folder
-	New-Item $folder -ItemType Directory
-	Write-Host "INFO Folder "$folder" created successfully"
+$Folder = "target"
+if (Test-Path $Folder) {
+    Remove-Item -Recurse $Folder
+    Write-Host "INFO Deleted folder $Folder"
+    New-Item $Folder -ItemType Directory
+    Write-Host "INFO Folder $Folder created successfully"
 }
 
-Write-Host "INFO Using Saxon (SAXON_CP="$env:SAXON_CP")"
 Write-Host "INFO Building MDG"
-$currentDirectory = Get-Location
-$mdgFileName = "mdg_eamt_sql.xml"
-$searchesFileName = "ea_search.xml"
-$viewsFileName = "ea_modelviews.xml"
-java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\combine_ea_searches_mdg.xsl -it:"start-template" -o:target\$mdgFileName folderPath=$currentDirectory\src version=$mdgVersion
+
+$CurrentDirectory = Get-Location
+$MdgFileName = "mdg_eamt_sql.xml"
+$SearchesFileName = "ea_search.xml"
+$ViewsFileName = "ea_modelviews.xml"
+
+$Java = Join-Path $env:JAVA_HOME "bin/java.exe"
+
+& $Java `
+    -cp $env:SAXON_CP `
+    net.sf.saxon.Transform `
+    -xsl:build/combine_ea_searches_mdg.xsl `
+    -it:"start-template" `
+    -o:target/$MdgFileName `
+    folderPath=$CurrentDirectory/src `
+    version=$MdgVersion
+
 Write-Host "INFO Building (editable) searches"
-java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\combine_ea_searches_import_export.xsl -it:"start-template" -o:target\$searchesFileName folderPath=$currentDirectory\src
+& $Java `
+    -cp $env:SAXON_CP `
+    net.sf.saxon.Transform `
+    -xsl:build/combine_ea_searches_import_export.xsl `
+    -it:"start-template" `
+    -o:target/$SearchesFileName `
+    folderPath=$CurrentDirectory/src
+
 Write-Host "INFO Copying (editable) model views"
-Copy-Item $currentDirectory\src\modelviews\modelviews.xml -Destination $currentDirectory\target\$viewsFileName
-(Get-Item $currentDirectory\target\ea_modelviews.xml).LastWriteTime = (Get-Date)
-(Get-Item $currentDirectory\target\ea_modelviews.xml).CreationTime = (Get-Date)
+Copy-Item $CurrentDirectory/src/modelviews/modelviews.xml -Destination $CurrentDirectory/target/$ViewsFileName
+(Get-Item $CurrentDirectory/target/ea_modelviews.xml).LastWriteTime = (Get-Date)
+(Get-Item $CurrentDirectory/target/ea_modelviews.xml).CreationTime = (Get-Date)
+
 Write-Host "INFO Building documentation"
-java -cp $env:SAXON_CP net.sf.saxon.Transform -xsl:build\create_mdg_documentation.xsl -s:target\$mdgFileName -it:"start-template" -o:target\index.html folderPath=$currentDirectory\src mdgFileName=$mdgFileName searchesFileName=$searchesFileName viewsFileName=$viewsFileName
+& $Java `
+    -cp $env:SAXON_CP `
+    net.sf.saxon.Transform `
+    -s:target/$MdgFileName `
+    -xsl:build/create_mdg_documentation.xsl `
+    -it:"start-template" `
+    -o:target/index.html `
+    folderPath=$CurrentDirectory/src `
+    version=$MdgVersion `
+    mdgFileName=$MdgFileName `
+    searchesFileName=$SearchesFileName `
+    viewsFileName=$ViewsFileName
+
 Write-Host "INFO Finished"
