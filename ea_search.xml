@@ -896,4 +896,36 @@
       </SrchOn>
       <LnksTo/>
    </Search>
+   <Search Name="types_for_attributes"
+           GUID="{E26817A2-4BBD-4f45-AE27-42C106F455AC}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT DISTINCT&#xA;&#x9;o2.ea_guid AS CLASSGUID,&#xA;&#x9;o2.object_type AS CLASSTYPE,&#xA;&#x9;o2.name AS type_name&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_object o2 ON&#xA;&#x9;a.classifier = o2.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;ORDER BY&#xA;&#x9;o2.name;&#xA;#DB=COMMENT# Gives all the types used for the attributes in the selected package and its subpackages. This query assumes that the attributes that have a type specified that is linked to an element (classifier) in the model, double-check with query attributes_with_type_without_classifier if needed. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
+   <Search Name="types_for_attributes_external"
+           GUID="{60F5B7E4-1104-431d-AB58-F858251425DA}"
+           PkgGUID="-1"
+           Type="0"
+           LnksToObj="0"
+           CustomSearch="1"
+           AddinAndMethodName="">
+      <SrchOn>
+         <RootTable Filter="SELECT DISTINCT&#xA;&#x9;o2.ea_guid AS CLASSGUID,&#xA;&#x9;o2.object_type AS CLASSTYPE,&#xA;&#x9;o2.name AS type_name&#xA;FROM&#xA;&#x9;((t_attribute a&#xA;INNER JOIN t_object o ON&#xA;&#x9;a.object_id = o.object_id)&#xA;INNER JOIN t_object o2 ON&#xA;&#x9;a.classifier = o2.object_id)&#xA;INNER JOIN t_package p ON&#xA;&#x9;p.package_id = o.package_id&#xA;WHERE&#xA;&#x9;o.package_id IN (#Branch#)&#xA;&#x9;AND o2.package_id NOT IN (#Branch#)&#xA;ORDER BY&#xA;&#x9;o2.name;&#xA;#DB=COMMENT# Gives all the types that (1) are used for attributes and (2) that are not defined in the selected package or its subpackages. This query assumes that the attributes that have a type specified that is linked to an element (classifier) in the model, double-check with query attributes_with_type_without_classifier if needed. #DB=COMMENT#"
+                    Type="-1">
+            <TableName Display="Custom SQL Search" Name=""/>
+            <TableHierarchy Display="" Hierarchy=""/>
+         </RootTable>
+      </SrchOn>
+      <LnksTo/>
+   </Search>
 </RootSearch>
