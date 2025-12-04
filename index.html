@@ -97,7 +97,7 @@
          <div class="ds-container">
             <ds-logo-title byline="Agency for Climate Data" title="EA Modelling Tools SQL"></ds-logo-title>
             <h1>EA Modelling Tools SQL</h1>
-            <p class="manchet">Version 0.9.0</p>
+            <p class="manchet">Version 0.9.1</p>
          </div>
       </header>
       <div class="grid-container">
@@ -625,11 +625,13 @@ WHERE
                         <h3 id="id_570DEBED-5247-4a74-9D83-3FDCD15C4BCC">attributes_size_precision_scale_export</h3>
                         <p> Finds all the attributes, including their values for tags size, precision and scale,
                            that have one of the following as type: CharacterString, Decimal, Integer, Real, Measure,
-                           Area, Length, DirectPosition. This query can be used as the starting point for a CSV
-                           file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript):
-                           use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
-                           paste in LibreOffice Calc (use semicolon as separator and check "Trim spaces"), modify
-                           as needed and save as a CSV file. </p>
+                           Area, Length, DirectPosition. The output of this query is the starting point for a
+                           CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript):
+                           (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
+                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
+                           the proposed character set, UTF-16), (3) modify the tagged values as needed and (4)
+                           save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation
+                           mark (") as string delimiter). </p>
                         <pre data-theme="light"><code class="language-sql">SELECT
 	a.ea_guid AS CLASSGUID,
 	a.ea_guid AS GUID,
@@ -3623,11 +3625,13 @@ ORDER BY
                      <section>
                         <h3 id="id_2229F872-F775-46bd-8E46-47C4D7C5081A">model_elements_tagged_value_export</h3>
                         <p> Finds all classifiers, properties, enumeration literals and connectors with the given
-                           tagged value. This query can be used as the starting point for a CSV file to import
-                           with script import-data-model-custom-tags (EA Modelling Tools JavaScript): use the
-                           "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
-                           paste in LibreOffice Calc (use semicolon as separator and check "Trim spaces"), modify
-                           as needed and save as a CSV file. </p>
+                           tagged value. The output of this query is the starting point for a CSV file to import
+                           with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use
+                           the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
+                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
+                           the proposed character set, UTF-16), (3) modify the tagged values as needed and (4)
+                           save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation
+                           mark (") as string delimiter). </p>
                         <pre data-theme="light"><code class="language-sql">SELECT
 	-- for display in EA
 	o.ea_guid AS CLASSGUID,
@@ -3640,7 +3644,10 @@ ORDER BY
 	-- for display in EA
 	o.object_type AS CLASSTYPE,
 	-- for import of tags via script import-data-model-custom-tags
-	upper(o.object_type) AS "TYPE",
+	CASE
+		WHEN o.object_type = 'DataType' THEN 'DATA_TYPE'
+		ELSE upper(o.object_type)
+	END AS "TYPE",
 	-- for display in EA
 	NULL AS CLASSTABLE,
 	-- for import of tags via script import-data-model-custom-tags
