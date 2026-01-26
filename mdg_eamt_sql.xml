@@ -3,7 +3,7 @@
    <Documentation id="eamt-sql"
                   name="EA Modelling Tools SQL"
                   notes="Model Searches and Model Views that can be used as a supplement to the other EA Modelling Tools"
-                  version="0.9.1"/>
+                  version="0.10.0"/>
    <ModelViews>
       <RootView Name="EA Modelling Tools SQL"
                 ID="{B9DDF7FF-6B27-425b-B741-A8C69E89C6DB}">
@@ -136,6 +136,24 @@
                     NType="9"
                     Name="classifiers, attributes and enumeration literals with invalid names"
                     ID="{52A68E56-DC0A-4eeb-BCD4-59DBCD1E5C93}"
+                    Pos="0"/>
+            <Search SrchID="{8B4976B0-3E13-4a4f-9384-C41DDA0D3D36}"
+                    SrchTerm=""
+                    AutoRefresh="0"
+                    Notify="0"
+                    RefreshSeconds="0"
+                    NType="9"
+                    Name="diagrams with associations with inconsistent reading directions"
+                    ID="{E8DFB17F-8538-4fff-A53C-652FE9C3C0F4}"
+                    Pos="0"/>
+            <Search SrchID="{2E95F88F-124D-40f4-9987-264B398685B8}"
+                    SrchTerm=""
+                    AutoRefresh="0"
+                    Notify="0"
+                    RefreshSeconds="0"
+                    NType="9"
+                    Name="diagrams with associations with unspecified reading directions"
+                    ID="{82ED7999-673A-43a8-B2B8-B11076EFC6CA}"
                     Pos="0"/>
             <Search SrchID="{2FFC9447-4996-4b4d-BCE5-F09A9A619733}"
                     SrchTerm=""
@@ -667,6 +685,38 @@
               AddinAndMethodName="">
          <SrchOn>
             <RootTable Filter="SELECT&#xA;&#x9;d.ea_guid AS CLASSGUID,&#xA;&#x9;d.diagram_type AS CLASSTYPE,&#xA;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;d.name&#xA;FROM&#xA;&#x9;t_diagram d&#xA;WHERE&#xA;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;AND d.name LIKE '&lt;Search Term&gt;%'&#xA;&#x9;AND NOT EXISTS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;*&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramobjects do&#xA;&#x9;INNER JOIN t_object o ON&#xA;&#x9;&#x9;do.object_id = o.object_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;d.diagram_id = do.diagram_id&#xA;&#x9;&#x9;AND o.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);&#xA;#DB=COMMENT# Find the context diagrams that do not contain the classifier they claim to contain according to the name of the context diagram. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. #DB=COMMENT#"
+                       Type="-1">
+               <TableName Display="Custom SQL Search" Name=""/>
+               <TableHierarchy Display="" Hierarchy=""/>
+            </RootTable>
+         </SrchOn>
+         <LnksTo/>
+      </Search>
+      <Search Name="diagrams_with_associations_with_inconsistent_reading_directions"
+              GUID="{8B4976B0-3E13-4a4f-9384-C41DDA0D3D36}"
+              PkgGUID="-1"
+              Type="0"
+              LnksToObj="0"
+              CustomSearch="1"
+              AddinAndMethodName="">
+         <SrchOn>
+            <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;WITH&#xA;&#x9;labelsetposition(diagramid, connectorid, connector_is_hidden, position, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        hidden,&#xA;&#x9;&#x9;instr(geometry, '$'),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramlinks),&#xA;&#x9;labelset(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;ltrim(substr(geometry, position), '$'),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;labelsetposition&#xA;&#x9;WHERE&#xA;&#x9;&#x9;position &gt; 0),&#xA;&#x9;middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, instr(text, 'LMT=')),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;labelset),&#xA;&#x9;middletoplabel(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, 1, instr(text, ';') - 1),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;middletoplabelplus),&#xA;&#x9;diagramlinkviewplus(diagramid, connectorid, connector_is_hidden, label_is_hiddenplus, directionplus) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, instr(text, 'HDN=')),&#xA;&#x9;&#x9;substr(text, instr(text, 'DIR='))&#xA;&#x9;FROM&#xA;&#x9;&#x9;middletoplabel&#xA;&#x9;WHERE&#xA;&#x9;&#x9;text &lt;&gt; 'LMT='),&#xA;&#x9;diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;CAST(substr(label_is_hiddenplus, 5, instr(label_is_hiddenplus, ':') - 5) AS INTEGER),&#xA;&#x9;&#x9;CAST(substr(directionplus, 5, instr(directionplus, ':') - 5) AS INTEGER)&#xA;&#x9;FROM&#xA;&#x9;&#x9;diagramlinkviewplus),&#xA;&#x9;diagrams_with_visible_association_labels(diagram_ea_guid, diagram_type, diagram_id, diagram_name, connector_id, connector_name, reading_direction) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;d.ea_guid,&#xA;&#x9;&#x9;d.diagram_type,&#xA;&#x9;&#x9;d.diagram_id,&#xA;&#x9;&#x9;d.name,&#xA;&#x9;&#x9;c.connector_id,&#xA;&#x9;&#x9;c.name,&#xA;&#x9;&#x9;dl.direction&#xA;&#x9;FROM&#xA;&#x9;&#x9;(diagramlinkview dl&#xA;&#x9;INNER JOIN t_diagram d ON&#xA;&#x9;&#x9;dl.diagramid = d.diagram_id)&#xA;&#x9;INNER JOIN t_connector c ON&#xA;&#x9;&#x9;dl.connectorid = c.connector_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation')&#xA;&#x9;&#x9;&#x9;&#x9;AND d.styleex NOT LIKE '%SuppConnectorLabels=1%'&#xA;&#x9;&#x9;&#x9;&#x9;AND d.pdata NOT LIKE '%HideRel=1%'&#xA;&#x9;&#x9;&#x9;&#x9;AND dl.connector_is_hidden = 0&#xA;&#x9;&#x9;&#x9;&#x9;AND dl.label_is_hidden = 0&#xA;&#x9;)&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagram_ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;diagram_type AS CLASSTYPE,&#xA;&#x9;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;&#x9;connector_name AS association_name,&#xA;&#x9;&#x9;CASE&#xA;&#x9;&#x9;&#x9;WHEN reading_direction = -1 THEN 'To Source'&#xA;&#x9;&#x9;&#x9;WHEN reading_direction = 0 THEN 'No Indicator'&#xA;&#x9;&#x9;&#x9;WHEN reading_direction = 1 THEN 'To Destination'&#xA;&#x9;&#x9;END AS association_reading_direction,&#xA;&#x9;&#x9;diagram_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;diagrams_with_visible_association_labels d&#xA;&#x9;WHERE&#xA;&#x9;&#x9;connector_id IN (&#xA;&#x9;&#x9;SELECT&#xA;&#x9;&#x9;&#x9;connector_id&#xA;&#x9;&#x9;FROM&#xA;&#x9;&#x9;&#x9;diagrams_with_visible_association_labels&#xA;&#x9;&#x9;GROUP BY&#xA;&#x9;&#x9;&#x9;connector_id&#xA;&#x9;&#x9;HAVING&#xA;&#x9;&#x9;&#x9;count(DISTINCT reading_direction) &gt; 1)&#xA;&#x9;ORDER BY&#xA;&#x9;&#x9;association_name,&#xA;&#x9;&#x9;diagram_name&#xA;)&#xA;;&#xA;#DB=COMMENT# Finds the diagrams that contain associations whose reading directions are inconsistent across diagrams. Only diagrams where both the association and its name are visible are taken into account. This query is useful because EA stores the reading direction of an association in t_diagramlinks, not in t_connector. #DB=COMMENT#"
+                       Type="-1">
+               <TableName Display="Custom SQL Search" Name=""/>
+               <TableHierarchy Display="" Hierarchy=""/>
+            </RootTable>
+         </SrchOn>
+         <LnksTo/>
+      </Search>
+      <Search Name="diagrams_with_associations_with_unspecified_reading_directions"
+              GUID="{2E95F88F-124D-40f4-9987-264B398685B8}"
+              PkgGUID="-1"
+              Type="0"
+              LnksToObj="0"
+              CustomSearch="1"
+              AddinAndMethodName="">
+         <SrchOn>
+            <RootTable Filter="SELECT&#xA;&#x9;*&#xA;FROM&#xA;&#x9;(&#xA;WITH&#xA;&#x9;labelsetposition(diagramid, connectorid, connector_is_hidden, position, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        hidden,&#xA;&#x9;&#x9;instr(geometry, '$'),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;t_diagramlinks),&#xA;&#x9;labelset(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;ltrim(substr(geometry, position), '$'),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;labelsetposition&#xA;&#x9;WHERE&#xA;&#x9;&#x9;position &gt; 0),&#xA;&#x9;middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, instr(text, 'LMT=')),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;labelset),&#xA;&#x9;middletoplabel(diagramid, connectorid, connector_is_hidden, text, geometry) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, 1, instr(text, ';') - 1),&#xA;&#x9;&#x9;geometry&#xA;&#x9;FROM&#xA;&#x9;&#x9;middletoplabelplus),&#xA;&#x9;diagramlinkviewplus(diagramid, connectorid, connector_is_hidden, label_is_hiddenplus, directionplus) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;substr(text, instr(text, 'HDN=')),&#xA;&#x9;&#x9;substr(text, instr(text, 'DIR='))&#xA;&#x9;FROM&#xA;&#x9;&#x9;middletoplabel&#xA;&#x9;WHERE&#xA;&#x9;&#x9;text &lt;&gt; 'LMT='),&#xA;&#x9;diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagramid,&#xA;&#x9;&#x9;connectorid,&#xA;        connector_is_hidden,&#xA;&#x9;&#x9;CAST(substr(label_is_hiddenplus, 5, instr(label_is_hiddenplus, ':') - 5) AS INTEGER),&#xA;&#x9;&#x9;CAST(substr(directionplus, 5, instr(directionplus, ':') - 5) AS INTEGER)&#xA;&#x9;FROM&#xA;&#x9;&#x9;diagramlinkviewplus),&#xA;&#x9;diagrams_with_visible_association_labels(diagram_ea_guid, diagram_type, diagram_id, diagram_name, connector_id, connector_name, reading_direction) AS (&#xA;&#x9;SELECT&#xA;&#x9;&#x9;d.ea_guid,&#xA;&#x9;&#x9;d.diagram_type,&#xA;&#x9;&#x9;d.diagram_id,&#xA;&#x9;&#x9;d.name,&#xA;&#x9;&#x9;c.connector_id,&#xA;&#x9;&#x9;c.name,&#xA;&#x9;&#x9;dl.direction&#xA;&#x9;FROM&#xA;&#x9;&#x9;(diagramlinkview dl&#xA;&#x9;INNER JOIN t_diagram d ON&#xA;&#x9;&#x9;dl.diagramid = d.diagram_id)&#xA;&#x9;INNER JOIN t_connector c ON&#xA;&#x9;&#x9;dl.connectorid = c.connector_id&#xA;&#x9;WHERE&#xA;&#x9;&#x9;d.package_id IN (#Branch#)&#xA;&#x9;&#x9;&#x9;AND c.connector_type IN ('Association', 'Aggregation')&#xA;&#x9;&#x9;&#x9;&#x9;AND d.styleex NOT LIKE '%SuppConnectorLabels=1%'&#xA;&#x9;&#x9;&#x9;&#x9;AND d.pdata NOT LIKE '%HideRel=1%'&#xA;&#x9;&#x9;&#x9;&#x9;AND dl.connector_is_hidden = 0&#xA;&#x9;&#x9;&#x9;&#x9;AND dl.label_is_hidden = 0&#xA;&#x9;)&#xA;&#x9;SELECT&#xA;&#x9;&#x9;diagram_ea_guid AS CLASSGUID,&#xA;&#x9;&#x9;diagram_type AS CLASSTYPE,&#xA;&#x9;&#x9;'t_diagram' AS CLASSTABLE,&#xA;&#x9;&#x9;connector_name AS association_name,&#xA;&#x9;&#x9;diagram_name&#xA;&#x9;FROM&#xA;&#x9;&#x9;diagrams_with_visible_association_labels d&#xA;&#x9;WHERE&#xA;&#x9;&#x9;length(connector_name) &gt; 0&#xA;&#x9;&#x9;AND reading_direction = 0&#xA;&#x9;ORDER BY&#xA;&#x9;&#x9;association_name,&#xA;&#x9;&#x9;diagram_name&#xA;)&#xA;;&#xA;#DB=COMMENT# Finds the diagrams that contain associations whose reading direction is unspecified. Only diagrams where both the association and its name are visible are taken into account. This query is useful because EA stores the reading direction of an association in t_diagramlinks, not in t_connector. #DB=COMMENT#"
                        Type="-1">
                <TableName Display="Custom SQL Search" Name=""/>
                <TableHierarchy Display="" Hierarchy=""/>

@@ -97,7 +97,7 @@
          <div class="ds-container">
             <ds-logo-title byline="Agency for Climate Data" title="EA Modelling Tools SQL"></ds-logo-title>
             <h1>EA Modelling Tools SQL</h1>
-            <p class="manchet">Version 0.9.1</p>
+            <p class="manchet">Version 0.10.0</p>
          </div>
       </header>
       <div class="grid-container">
@@ -127,6 +127,8 @@
                   <li><a href="#id_F2E16AC9-F905-4a1e-9AFB-D721E3504EF6">classifiers_with_navigable_association_ends_without_explicit_multiplicity</a></li>
                   <li><a href="#id_177A5C10-0B77-4d83-9731-8C5008E5C275">constraints</a></li>
                   <li><a href="#id_9C568A9A-771B-45b8-957C-BC016455F994">context_diagrams_without_central_classifier</a></li>
+                  <li><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</a></li>
+                  <li><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</a></li>
                   <li><a href="#id_2FFC9447-4996-4b4d-BCE5-F09A9A619733">diagrams_with_diagramdetails</a></li>
                   <li><a href="#id_B4D415F5-5EA1-4a48-BDC3-72A51B1380F9">diagrams_with_diagramnotes</a></li>
                   <li><a href="#id_9BE287B7-E2E0-4db1-ADA0-6FA591597ED6">diagrams_with_invalid_names_da</a></li>
@@ -276,6 +278,16 @@
                               <tr>
                                  <td>classifiers, attributes and enumeration literals with invalid names</td>
                                  <td><a href="#id_3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E" aria-label="See search model_elements_invalid_names_internal" title="See search model_elements_invalid_names_internal">see search details</a></td>
+                                 <td></td>
+                              </tr>
+                              <tr>
+                                 <td>diagrams with associations with inconsistent reading directions</td>
+                                 <td><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36" aria-label="See search diagrams_with_associations_with_inconsistent_reading_directions" title="See search diagrams_with_associations_with_inconsistent_reading_directions">see search details</a></td>
+                                 <td></td>
+                              </tr>
+                              <tr>
+                                 <td>diagrams with associations with unspecified reading directions</td>
+                                 <td><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8" aria-label="See search diagrams_with_associations_with_unspecified_reading_directions" title="See search diagrams_with_associations_with_unspecified_reading_directions">see search details</a></td>
                                  <td></td>
                               </tr>
                               <tr>
@@ -1417,6 +1429,238 @@ WHERE
 		d.diagram_id = do.diagram_id
 		AND o.package_id IN (#Branch#)
 			AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);
+</code></pre>
+                     </section>
+                     <section>
+                        <h3 id="id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</h3>
+                        <p> Finds the diagrams that contain associations whose reading directions are inconsistent
+                           across diagrams. Only diagrams where both the association and its name are visible
+                           are taken into account. This query is useful because EA stores the reading direction
+                           of an association in t_diagramlinks, not in t_connector. </p>
+                        <pre data-theme="light"><code class="language-sql">SELECT
+	*
+FROM
+	(
+WITH
+	labelsetposition(diagramid, connectorid, connector_is_hidden, position, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        hidden,
+		instr(geometry, '$'),
+		geometry
+	FROM
+		t_diagramlinks),
+	labelset(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		ltrim(substr(geometry, position), '$'),
+		geometry
+	FROM
+		labelsetposition
+	WHERE
+		position &gt; 0),
+	middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, instr(text, 'LMT=')),
+		geometry
+	FROM
+		labelset),
+	middletoplabel(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, 1, instr(text, ';') - 1),
+		geometry
+	FROM
+		middletoplabelplus),
+	diagramlinkviewplus(diagramid, connectorid, connector_is_hidden, label_is_hiddenplus, directionplus) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, instr(text, 'HDN=')),
+		substr(text, instr(text, 'DIR='))
+	FROM
+		middletoplabel
+	WHERE
+		text &lt;&gt; 'LMT='),
+	diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		CAST(substr(label_is_hiddenplus, 5, instr(label_is_hiddenplus, ':') - 5) AS INTEGER),
+		CAST(substr(directionplus, 5, instr(directionplus, ':') - 5) AS INTEGER)
+	FROM
+		diagramlinkviewplus),
+	diagrams_with_visible_association_labels(diagram_ea_guid, diagram_type, diagram_id, diagram_name, connector_id, connector_name, reading_direction) AS (
+	SELECT
+		d.ea_guid,
+		d.diagram_type,
+		d.diagram_id,
+		d.name,
+		c.connector_id,
+		c.name,
+		dl.direction
+	FROM
+		(diagramlinkview dl
+	INNER JOIN t_diagram d ON
+		dl.diagramid = d.diagram_id)
+	INNER JOIN t_connector c ON
+		dl.connectorid = c.connector_id
+	WHERE
+		d.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation')
+				AND d.styleex NOT LIKE '%SuppConnectorLabels=1%'
+				AND d.pdata NOT LIKE '%HideRel=1%'
+				AND dl.connector_is_hidden = 0
+				AND dl.label_is_hidden = 0
+	)
+	SELECT
+		diagram_ea_guid AS CLASSGUID,
+		diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		connector_name AS association_name,
+		CASE
+			WHEN reading_direction = -1 THEN 'To Source'
+			WHEN reading_direction = 0 THEN 'No Indicator'
+			WHEN reading_direction = 1 THEN 'To Destination'
+		END AS association_reading_direction,
+		diagram_name
+	FROM
+		diagrams_with_visible_association_labels d
+	WHERE
+		connector_id IN (
+		SELECT
+			connector_id
+		FROM
+			diagrams_with_visible_association_labels
+		GROUP BY
+			connector_id
+		HAVING
+			count(DISTINCT reading_direction) &gt; 1)
+	ORDER BY
+		association_name,
+		diagram_name
+)
+;
+</code></pre>
+                     </section>
+                     <section>
+                        <h3 id="id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</h3>
+                        <p> Finds the diagrams that contain associations whose reading direction is unspecified.
+                           Only diagrams where both the association and its name are visible are taken into account.
+                           This query is useful because EA stores the reading direction of an association in
+                           t_diagramlinks, not in t_connector. </p>
+                        <pre data-theme="light"><code class="language-sql">SELECT
+	*
+FROM
+	(
+WITH
+	labelsetposition(diagramid, connectorid, connector_is_hidden, position, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        hidden,
+		instr(geometry, '$'),
+		geometry
+	FROM
+		t_diagramlinks),
+	labelset(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		ltrim(substr(geometry, position), '$'),
+		geometry
+	FROM
+		labelsetposition
+	WHERE
+		position &gt; 0),
+	middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, instr(text, 'LMT=')),
+		geometry
+	FROM
+		labelset),
+	middletoplabel(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, 1, instr(text, ';') - 1),
+		geometry
+	FROM
+		middletoplabelplus),
+	diagramlinkviewplus(diagramid, connectorid, connector_is_hidden, label_is_hiddenplus, directionplus) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		substr(text, instr(text, 'HDN=')),
+		substr(text, instr(text, 'DIR='))
+	FROM
+		middletoplabel
+	WHERE
+		text &lt;&gt; 'LMT='),
+	diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (
+	SELECT
+		diagramid,
+		connectorid,
+        connector_is_hidden,
+		CAST(substr(label_is_hiddenplus, 5, instr(label_is_hiddenplus, ':') - 5) AS INTEGER),
+		CAST(substr(directionplus, 5, instr(directionplus, ':') - 5) AS INTEGER)
+	FROM
+		diagramlinkviewplus),
+	diagrams_with_visible_association_labels(diagram_ea_guid, diagram_type, diagram_id, diagram_name, connector_id, connector_name, reading_direction) AS (
+	SELECT
+		d.ea_guid,
+		d.diagram_type,
+		d.diagram_id,
+		d.name,
+		c.connector_id,
+		c.name,
+		dl.direction
+	FROM
+		(diagramlinkview dl
+	INNER JOIN t_diagram d ON
+		dl.diagramid = d.diagram_id)
+	INNER JOIN t_connector c ON
+		dl.connectorid = c.connector_id
+	WHERE
+		d.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation')
+				AND d.styleex NOT LIKE '%SuppConnectorLabels=1%'
+				AND d.pdata NOT LIKE '%HideRel=1%'
+				AND dl.connector_is_hidden = 0
+				AND dl.label_is_hidden = 0
+	)
+	SELECT
+		diagram_ea_guid AS CLASSGUID,
+		diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		connector_name AS association_name,
+		diagram_name
+	FROM
+		diagrams_with_visible_association_labels d
+	WHERE
+		length(connector_name) &gt; 0
+		AND reading_direction = 0
+	ORDER BY
+		association_name,
+		diagram_name
+)
+;
 </code></pre>
                      </section>
                      <section>
