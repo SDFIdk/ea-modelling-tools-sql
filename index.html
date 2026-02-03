@@ -97,7 +97,7 @@
          <div class="ds-container">
             <ds-logo-title byline="Agency for Climate Data" title="EA Modelling Tools SQL"></ds-logo-title>
             <h1>EA Modelling Tools SQL</h1>
-            <p class="manchet">Version 0.10.0</p>
+            <p class="manchet">Version 0.11.0</p>
          </div>
       </header>
       <div class="grid-container">
@@ -126,7 +126,8 @@
                   <li><a href="#id_48EEA0D3-5401-4aeb-8913-97765C27DC71">classifiers_with_duplicate_names</a></li>
                   <li><a href="#id_F2E16AC9-F905-4a1e-9AFB-D721E3504EF6">classifiers_with_navigable_association_ends_without_explicit_multiplicity</a></li>
                   <li><a href="#id_177A5C10-0B77-4d83-9731-8C5008E5C275">constraints</a></li>
-                  <li><a href="#id_9C568A9A-771B-45b8-957C-BC016455F994">context_diagrams_without_central_classifier</a></li>
+                  <li><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83">context_diagrams_missing_model_elements</a></li>
+                  <li><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B">context_diagrams_superfluous_model_elements</a></li>
                   <li><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</a></li>
                   <li><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</a></li>
                   <li><a href="#id_2FFC9447-4996-4b4d-BCE5-F09A9A619733">diagrams_with_diagramdetails</a></li>
@@ -366,8 +367,13 @@
                                  <td>Kontekstdiagram</td>
                               </tr>
                               <tr>
-                                 <td>context diagrams without central classifier (Danish)</td>
-                                 <td><a href="#id_9C568A9A-771B-45b8-957C-BC016455F994" aria-label="See search context_diagrams_without_central_classifier" title="See search context_diagrams_without_central_classifier">see search details</a></td>
+                                 <td>context diagrams missing model elements (Danish)</td>
+                                 <td><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83" aria-label="See search context_diagrams_missing_model_elements" title="See search context_diagrams_missing_model_elements">see search details</a></td>
+                                 <td>Kontekstdiagram</td>
+                              </tr>
+                              <tr>
+                                 <td>context diagrams with superfluous model elements (Danish)</td>
+                                 <td><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B" aria-label="See search context_diagrams_superfluous_model_elements" title="See search context_diagrams_superfluous_model_elements">see search details</a></td>
                                  <td>Kontekstdiagram</td>
                               </tr>
                               <tr>
@@ -400,8 +406,13 @@
                                  <td>Context diagram</td>
                               </tr>
                               <tr>
-                                 <td>context diagrams without central classifier (English)</td>
-                                 <td><a href="#id_9C568A9A-771B-45b8-957C-BC016455F994" aria-label="See search context_diagrams_without_central_classifier" title="See search context_diagrams_without_central_classifier">see search details</a></td>
+                                 <td>context diagrams missing model elements (English)</td>
+                                 <td><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83" aria-label="See search context_diagrams_missing_model_elements" title="See search context_diagrams_missing_model_elements">see search details</a></td>
+                                 <td>Context diagram</td>
+                              </tr>
+                              <tr>
+                                 <td>context diagrams with superfluous model elements (English)</td>
+                                 <td><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B" aria-label="See search context_diagrams_superfluous_model_elements" title="See search context_diagrams_superfluous_model_elements">see search details</a></td>
                                  <td>Context diagram</td>
                               </tr>
                               <tr>
@@ -838,11 +849,11 @@ ORDER BY
                      </section>
                      <section>
                         <h3 id="id_4EFB024C-EA07-4c8a-A68F-EC1FFB18764A">classes_without_context_diagram</h3>
-                        <p> Find the classes that don't have a context diagram. A context diagram must be a class
-                           diagram and it must have a name consisting of (1) the term specified as search term
-                           (e.g. "Context diagram" or "Kontekstdiagram") (2) a space and (3) the name of the
-                           class. This query is intended to be used in a model view, where the search term is
-                           fixed and valid only in a given language. </p>
+                        <p> Find the classes that do not have a context diagram. A context diagram must be a
+                           class diagram and it must have a name consisting of (1) the term specified as search
+                           term (e.g. "Context diagram" or "Kontekstdiagram") (2) a space and (3) the name of
+                           the class. This query is intended to be used in a model view, where the search term
+                           is fixed and valid only in a given language. </p>
                         <pre data-theme="light"><code class="language-sql">SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
@@ -853,8 +864,16 @@ WHERE
 	o.package_id IN (#Branch#)
 	AND object_type = 'Class'
 	AND NOT EXISTS
-(select * from t_diagramobjects do inner join t_diagram d on do.diagram_id = d.diagram_id
-where d.name = #Concat '&lt;Search Term&gt; ', o.name#);
+(
+	SELECT
+		*
+	FROM
+		t_diagramobjects do
+	INNER JOIN t_diagram d ON
+		do.diagram_id = d.diagram_id
+	WHERE
+		d.diagram_type = 'Logical'
+		AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);
 </code></pre>
                      </section>
                      <section>
@@ -1404,31 +1423,375 @@ WHERE
 </code></pre>
                      </section>
                      <section>
-                        <h3 id="id_9C568A9A-771B-45b8-957C-BC016455F994">context_diagrams_without_central_classifier</h3>
-                        <p> Find the context diagrams that do not contain the classifier they claim to contain
-                           according to the name of the context diagram. This query is intended to be used in
-                           a model view, where the search term is fixed and valid only in a given language. </p>
+                        <h3 id="id_A49ED812-771C-4458-AEBF-D7B72032FA83">context_diagrams_missing_model_elements</h3>
+                        <p> Finds the context diagrams for which any of the following is true: (1) the context
+                           diagram name does not indicate a classifier that actually exists in the model; (2)
+                           the context diagram does not actually contain the classifier indicated by the diagram
+                           name; (3) the context diagram does not contain all the classifiers that (a) are the
+                           type of one of the attributes of the central classifier and (b) are defined in the
+                           same model as the central classifier; (4) the context diagram does not contain all
+                           the classifiers that are the type of a navigable association end of the central classifier.
+                           Example for 1: if a context diagram has "MyObject" as central classifier, and if "MyObject"
+                           has an attribute with type "MyDataType", and if "MyDataType" is defined in the same
+                           model as "MyObject", then the context diagram will be returned if "MyDataType" is
+                           not present on the context diagram. This query is intended to be used in a model view,
+                           where the search term is fixed and valid only in a given language. </p>
                         <pre data-theme="light"><code class="language-sql">SELECT
-	d.ea_guid AS CLASSGUID,
-	d.diagram_type AS CLASSTYPE,
-	't_diagram' AS CLASSTABLE,
-	d.name
+	*
 FROM
-	t_diagram d
-WHERE
-	d.package_id IN (#Branch#)
-	AND d.name LIKE '&lt;Search Term&gt;%'
-	AND NOT EXISTS (
+	(
+WITH
+context_diagrams AS (
+    SELECT
+        d.ea_guid AS CLASSGUID,
+        d.diagram_type AS CLASSTYPE,
+        't_diagram' AS CLASSTABLE,
+        d.diagram_id,
+        d.name AS diagram_name,
+        replace(d.name, '&lt;Search Term&gt; ', '') AS central_classifier_name,
+        o.object_id AS central_classifier_id
+    FROM
+        t_diagram d
+    LEFT JOIN t_object o ON
+        d.name = #Concat '&lt;Search Term&gt; ', o.name#
+        AND o.package_id IN (#Branch#)
+    WHERE
+        d.package_id IN (#Branch#)
+        AND d.name LIKE '&lt;Search Term&gt;%'
+),
+attributes_with_type AS (
 	SELECT
-		*
+		o.object_id AS classifier_id,
+		a.id AS attribute_id,
+		a.name AS attribute_name,
+		t.object_id AS type_id,
+		t.name AS type_name,
+		t.package_id AS type_package_id
 	FROM
-		t_diagramobjects do
-	INNER JOIN t_object o ON
-		do.object_id = o.object_id
+		t_object o
+	INNER JOIN t_attribute a ON
+		o.object_id = a.object_id
+	INNER JOIN t_object t ON
+		a.classifier = t.object_id
 	WHERE
-		d.diagram_id = do.diagram_id
+		o.package_id IN (#Branch#)
+			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+				AND instr(a.styleex, 'IsLiteral=1') = 0
+),
+	navigable_association_ends AS (
+	SELECT
+		o_start.object_id AS start_classifier_id,
+		o_start.name AS start_classifier_name,
+		c.connector_id AS association_id,
+		c.name AS association_name,
+		c.destrole AS end_classifier_role,
+		o_end.object_id AS end_classifier_id,
+		o_end.name AS end_classifier_name
+	FROM
+		(t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+UNION ALL
+	SELECT
+		o_end.object_id,
+		o_end.name,
+		c.connector_id,
+		c.name,
+		c.sourcerole,
+		o_start.object_id,
+		o_start.name
+	FROM
+		(t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+)
+	SELECT
+		d.CLASSGUID,
+		d.CLASSTYPE,
+		d.CLASSTABLE,
+		d.diagram_name,
+		d.central_classifier_name AS model_element_name,
+		#Concat 'No classifier with name ', d.central_classifier_name, ' found in the selected package'# AS info
+	FROM
+		context_diagrams d
+	WHERE
+		d.central_classifier_id IS NULL
+UNION ALL
+	SELECT
+		d.CLASSGUID,
+		d.CLASSTYPE,
+		d.CLASSTABLE,
+		d.diagram_name,
+		d.central_classifier_name,
+		#Concat d.central_classifier_name, ' is supposed to be the central classifier of this diagram according to the diagram''s name'#
+	FROM
+		context_diagrams d
+	WHERE
+		d.central_classifier_id IS NOT NULL AND NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		WHERE
+			do.diagram_id = d.diagram_id
+			AND do.object_id = d.central_classifier_id)
+UNION ALL
+	SELECT
+		d.CLASSGUID,
+		d.CLASSTYPE,
+		d.CLASSTABLE,
+		d.diagram_name,
+		a.type_name,
+		#Concat a.type_name, ' is the type of attribute ', a.attribute_name, ' and is defined in the selected package'#
+	FROM
+		context_diagrams d
+	INNER JOIN attributes_with_type a ON
+		d.central_classifier_id = a.classifier_id
+	WHERE
+		a.type_package_id IN (#Branch#)
+		AND NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		WHERE
+			do.diagram_id = d.diagram_id
+			AND do.object_id = a.type_id)
+UNION ALL
+	SELECT
+		d.CLASSGUID,
+		d.CLASSTYPE,
+		d.CLASSTABLE,
+		d.diagram_name,
+		n.end_classifier_name,
+		#Concat end_classifier_name, ' is the type of association end ', CASE WHEN end_classifier_role IS NULL THEN '(no name)' ELSE end_classifier_role END#
+	FROM
+		context_diagrams d
+	INNER JOIN navigable_association_ends n ON
+		d.central_classifier_id = n.start_classifier_id
+	WHERE
+		NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		WHERE
+			do.diagram_id = d.diagram_id
+			AND do.object_id = n.end_classifier_id)
+UNION ALL
+	SELECT
+		d.CLASSGUID,
+		d.CLASSTYPE,
+		d.CLASSTABLE,
+		d.diagram_name,
+		n.association_name,
+		#Concat 'The association between ', d.central_classifier_name, ' and ', n.end_classifier_name, ' is hidden '#
+	FROM
+		context_diagrams d
+	INNER JOIN navigable_association_ends n ON
+		d.central_classifier_id = n.start_classifier_id
+	INNER JOIN t_diagramlinks dl ON
+		n.association_id = dl.connectorid AND d.diagram_id = dl.diagramid
+	WHERE
+		dl.hidden = 1
+)
+;
+</code></pre>
+                     </section>
+                     <section>
+                        <h3 id="id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B">context_diagrams_superfluous_model_elements</h3>
+                        <p> Finds the context diagrams for which any of the following is true: (1) the context
+                           diagram contains a data type (an enumeration is a kind of data type) that is not the
+                           type of any of the attributes of the classifiers on the diagram; (2) the context diagram
+                           contains an association that is not an outgoing association of the central classifier.
+                           This query is intended to be used in a model view, where the search term is fixed
+                           and valid only in a given language. </p>
+                        <pre data-theme="light"><code class="language-sql">SELECT
+	*
+FROM
+	(
+WITH
+context_diagrams AS (
+	SELECT
+		d.ea_guid AS diagram_ea_guid,
+		d.diagram_type AS diagram_type,
+		d.diagram_id,
+		d.name AS diagram_name,
+		replace(d.name, '&lt;Search Term&gt; ', '') AS central_classifier_name,
+		o.object_id AS central_classifier_id
+	FROM
+		t_diagram d
+	LEFT JOIN t_object o ON
+		d.name = #Concat '&lt;Search Term&gt; ', o.name#
 		AND o.package_id IN (#Branch#)
-			AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);
+	WHERE
+		d.package_id IN (#Branch#)
+		AND d.name LIKE '&lt;Search Term&gt;%'
+),
+	classifiers_on_context_diagrams AS (
+	SELECT
+		d.*,
+		o.object_id AS classifier_id,
+		o.object_type AS classifier_type,
+		o.name AS classifier_name
+	FROM 
+		t_object o
+	INNER JOIN t_diagramobjects do ON
+		o.object_id = do.object_id
+	INNER JOIN context_diagrams d ON
+		do.diagram_id = d.diagram_id
+	WHERE
+		o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+)
+,
+	attributes_on_context_diagrams AS (
+	SELECT
+		c.*,
+		a.id AS attribute_id,
+		a.name AS attribute_name,
+		t.object_id AS type_id,
+		t.name AS type_name,
+		t.package_id AS type_package_id
+	FROM
+		classifiers_on_context_diagrams c
+	INNER JOIN t_attribute a ON
+		c.classifier_id = a.object_id
+	INNER JOIN t_object t ON
+		a.classifier = t.object_id
+	WHERE
+		instr(a.styleex, 'IsLiteral=1') = 0
+),
+	navigable_association_ends AS (
+	SELECT
+		o_start.object_id AS start_classifier_id,
+		o_start.name AS start_classifier_name,
+		c.connector_id AS association_id,
+		c.name AS association_name,
+		c.direction AS association_direction,
+		c.destrole AS end_classifier_role,
+		o_end.object_id AS end_classifier_id,
+		o_end.name AS end_classifier_name
+	FROM
+		(t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+UNION ALL
+	SELECT
+		o_end.object_id,
+		o_end.name,
+		c.connector_id,
+		c.name,
+		c.direction,
+		c.sourcerole,
+		o_start.object_id,
+		o_start.name
+	FROM
+		(t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+),
+	visible_navigable_association_ends_on_context_diagrams AS (
+	SELECT
+		c.*,
+		n.*
+	FROM
+		context_diagrams c
+		INNER JOIN t_diagramlinks dl ON
+			c.diagram_id = dl.diagramid
+		INNER JOIN navigable_association_ends n ON
+			dl.connectorid = n.association_id
+	WHERE
+		dl.hidden = 0
+)
+	SELECT
+		c.diagram_ea_guid AS CLASSGUID,
+		c.diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		c.diagram_name,
+		c.classifier_name AS model_element_name,
+		#Concat c.classifier_name, ' is not a type of any of the attributes on the diagram'# AS info
+	FROM
+		classifiers_on_context_diagrams c
+	WHERE
+		c.classifier_id &lt;&gt; c.central_classifier_id
+		AND c.classifier_type IN ('DataType', 'Enumeration')
+		AND c.classifier_id NOT IN (
+		SELECT
+			a.type_id
+		FROM
+			attributes_on_context_diagrams a
+		WHERE
+			a.diagram_id = c.diagram_id)
+UNION ALL
+	SELECT
+		v.diagram_ea_guid AS CLASSGUID,
+		v.diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		v.diagram_name,
+		v.association_name AS model_element_name,
+		#Concat 'The association from ', v.start_classifier_name, ' to ', v.end_classifier_name, ' is not an outgoing assocation of the central classifier ', v.central_classifier_name#
+	FROM
+		visible_navigable_association_ends_on_context_diagrams v
+	WHERE
+		v.start_classifier_id &lt;&gt; v.central_classifier_id
+		AND v.association_direction &lt;&gt; 'Bi-Directional'
+);
 </code></pre>
                      </section>
                      <section>
@@ -4701,7 +5064,7 @@ UNION
 SELECT
 	DISTINCT at.property
 FROM
-	t_attributetag AT
+	t_attributetag at
 INNER JOIN t_attribute a ON
 	at.elementid = a.id
 INNER JOIN t_object o ON
@@ -4754,7 +5117,7 @@ WHERE
 			AND c.subtype = 'Strong'))
 UNION
 SELECT
-	DISTINCT ct.value
+	DISTINCT ct.property
 FROM
 	t_connectortag ct
 INNER JOIN t_connector c ON
