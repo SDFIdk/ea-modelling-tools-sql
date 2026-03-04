@@ -97,7 +97,7 @@
          <div class="ds-container">
             <ds-logo-title byline="Agency for Climate Data" title="EA Modelling Tools SQL"></ds-logo-title>
             <h1>EA Modelling Tools SQL</h1>
-            <p class="manchet">Version 0.12.0</p>
+            <p class="manchet">Version 0.13.0</p>
          </div>
       </header>
       <div class="grid-container">
@@ -128,6 +128,7 @@
                   <li><a href="#id_177A5C10-0B77-4d83-9731-8C5008E5C275">constraints</a></li>
                   <li><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83">context_diagrams_missing_model_elements</a></li>
                   <li><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B">context_diagrams_superfluous_model_elements</a></li>
+                  <li><a href="#id_4A380D72-860C-41bd-8684-E4719531D67F">data_model_vocabulary_da</a></li>
                   <li><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</a></li>
                   <li><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</a></li>
                   <li><a href="#id_2FFC9447-4996-4b4d-BCE5-F09A9A619733">diagrams_with_diagramdetails</a></li>
@@ -594,7 +595,7 @@ INNER JOIN t_package p ON
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type = 'Enumeration'
-	AND instr(a.styleex, 'IsLiteral=1') = 0;
+	AND a.styleex NOT LIKE '%IsLiteral=1%';
 </code></pre>
                      </section>
                      <section>
@@ -642,7 +643,7 @@ INNER JOIN t_package p ON
 WHERE
 		o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.styleex NOT LIKE '%IsLiteral=1%'
 	AND a.type in ('CharacterString', 'Decimal', 'Real', 'Integer', 'Measure', 'Area', 'Length', 'DirectPosition');
 </code></pre>
                      </section>
@@ -664,8 +665,8 @@ WHERE
 	o.Name AS NAMESPACE,
 	'Attribute' AS CLASSTYPE,
 	CASE
-		WHEN instr(a.styleex, 'IsLiteral=1') = 0 THEN 'ATTRIBUTE'
-		ELSE 'ENUMERATION_LITERAL'
+		WHEN a.styleex LIKE '%IsLiteral=1%' THEN 'ENUMERATION_LITERAL'
+		ELSE 'ATTRIBUTE'
 	END AS "TYPE",
 	NULL AS CLASSTABLE,
 	(
@@ -701,7 +702,7 @@ INNER JOIN t_package p ON
 WHERE
 		o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.styleex NOT LIKE '%IsLiteral=1%'
 	AND a.type in ('CharacterString', 'Decimal', 'Real', 'Integer', 'Measure', 'Area', 'Length', 'DirectPosition');
 </code></pre>
                      </section>
@@ -1478,7 +1479,7 @@ attributes_with_type AS (
 	WHERE
 		o.package_id IN (#Branch#)
 			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-				AND instr(a.styleex, 'IsLiteral=1') = 0
+				AND a.styleex NOT LIKE '%IsLiteral=1%'
 ),
 	navigable_association_ends AS (
 	SELECT
@@ -1689,7 +1690,7 @@ context_diagrams AS (
 	INNER JOIN t_object t ON
 		a.classifier = t.object_id
 	WHERE
-		instr(a.styleex, 'IsLiteral=1') = 0
+		a.styleex NOT LIKE '%IsLiteral=1%'
 ),
 	navigable_association_ends AS (
 	SELECT
@@ -1793,6 +1794,406 @@ UNION ALL
 	WHERE
 		v.start_classifier_id &lt;&gt; v.central_classifier_id
 		AND v.association_direction &lt;&gt; 'Bi-Directional'
+);
+</code></pre>
+                     </section>
+                     <section>
+                        <h3 id="id_4A380D72-860C-41bd-8684-E4719531D67F">data_model_vocabulary_da</h3>
+                        <p> The output of this query is the starting point for a CSV file to either include in
+                           a data vocabulary or use as a standalone data vocabulary written in AsciiDoc: (1)
+                           use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
+                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
+                           the proposed character set, UTF-16), (3) remove any redundant rows (4) save as a CSV
+                           file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark
+                           (") as string delimiter). </p>
+                        <pre data-theme="light"><code class="language-sql">SELECT
+	*
+FROM
+	(
+WITH 
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '&lt;memo&gt;'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '&lt;memo&gt;'),
+	attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '&lt;memo&gt;'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '&lt;memo&gt;'),
+	associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '&lt;memo&gt;$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '&lt;memo&gt;$ea_notes=') = 1),
+	modellabel(visiblelabel, tooltiplabel) AS (
+	SELECT
+		CASE
+			WHEN tv1.tagvalue IS NULL
+				AND tv2.tagvalue IS NULL THEN p.name
+				WHEN tv1.tagvalue IS NOT NULL
+				AND tv2.tagvalue IS NULL THEN tv1.tagvalue
+				WHEN tv1.tagvalue IS NULL
+				AND tv2.tagvalue IS NOT NULL THEN p.name || ' v' || tv2.tagvalue
+				WHEN tv1.tagvalue IS NOT NULL
+				AND tv2.tagvalue IS NOT NULL THEN tv1.tagvalue || ' v' || tv2.tagvalue
+			END,
+			CASE
+				WHEN tv1.tagvalue IS NULL THEN p.name
+				WHEN tv1.tagvalue IS NOT NULL THEN tv1.tagvalue
+			END
+		FROM
+			t_object o
+		INNER JOIN t_package p ON
+			o.ea_guid = p.ea_guid
+		LEFT JOIN object_tagged_values tv1 ON
+			o.object_id = tv1.object_id
+			AND tv1.tagname = 'title (da)'
+		LEFT JOIN object_tagged_values tv2 ON
+			o.object_id = tv2.object_id
+			AND tv2.tagname = 'versionInfo'
+		WHERE
+			p.package_id = #Package#
+			AND o.object_type = 'Package'
+),
+	modelinfo(text) AS (
+	SELECT
+		CASE
+			WHEN '&lt;Search Term&gt;' = '' THEN m.visiblelabel
+			ELSE '&lt;Search Term&gt;[' || m.visiblelabel || ',title=Læs mere om ' || m.tooltiplabel || ']'
+		END
+	FROM
+		modellabel m
+)
+	SELECT
+		DISTINCT
+		m.text AS "Model",
+		o.name AS "Navn i model",
+		CASE
+			o.object_type
+			WHEN 'Class' THEN 'kl'
+			WHEN 'DataType' THEN 'da'
+			WHEN 'Enumeration' THEN 'en'
+		END AS "Type",
+		tv1.tagvalue AS "Foretrukken term",
+		tv2.tagvalue AS "Definition",
+		tv3.tagvalue AS "Kommentar",
+		tv4.tagvalue AS "Eksempel",
+		tv5.tagvalue AS "Accepterede termer",
+		CASE
+			WHEN tv6.tagvalue LIKE 'http%' THEN REPLACE(REPLACE(tv6.tagvalue, ' ', ''), '|||', '[§,title=Gå til den juridiske kilde] ') || '[§,title=Gå til den juridiske kilde] '
+			ELSE COALESCE(tv6.tagvalue, '')
+		END
+		||
+		CASE
+			WHEN tv7.tagvalue LIKE 'http%' THEN tv7.tagvalue || '[»,title=Gå til kilden] '
+			ELSE COALESCE(tv7.tagvalue, '')
+		END
+		||
+		CASE
+			WHEN tv8.tagvalue LIKE 'http%' THEN tv8.tagvalue || '[☰,title=Gå til kodelisten]'
+			ELSE COALESCE(tv8.tagvalue, '')
+		END AS "Info",
+		tv9.tagvalue AS "Frarådede termer",
+		tv10.tagvalue AS "Translitereret navn i model"
+	FROM
+		t_object o
+	LEFT JOIN object_tagged_values tv1 ON
+		o.object_id = tv1.object_id
+		AND tv1.tagname = 'prefLabel (da)'
+	LEFT JOIN object_tagged_values tv2 ON
+		o.object_id = tv2.object_id
+		AND tv2.tagname = 'definition (da)'
+	LEFT JOIN object_tagged_values tv3 ON
+		o.object_id = tv3.object_id
+		AND tv3.tagname = 'comment (da)'
+	LEFT JOIN object_tagged_values tv4 ON
+		o.object_id = tv4.object_id
+		AND tv4.tagname = 'example (da)'
+	LEFT JOIN object_tagged_values tv5 ON
+		o.object_id = tv5.object_id
+		AND tv5.tagname = 'altLabel (da)'
+	LEFT JOIN object_tagged_values tv6 ON
+		o.object_id = tv6.object_id
+		AND tv6.tagname = 'legalSource'
+	LEFT JOIN object_tagged_values tv7 ON
+		o.object_id = tv7.object_id
+		AND tv7.tagname = 'source'
+	LEFT JOIN object_tagged_values tv8 ON
+		o.object_id = tv8.object_id
+		AND tv8.tagname = 'vokabularium'
+	LEFT JOIN object_tagged_values tv9 ON
+		o.object_id = tv9.object_id
+		AND tv9.tagname = 'deprecatedLabel (da)'
+	LEFT JOIN object_tagged_values tv10 ON
+		o.object_id = tv10.object_id
+		AND tv10.tagname = 'transliteratedName',
+		modelinfo m
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration')
+UNION ALL
+	SELECT
+		DISTINCT
+		m.text AS "Model",
+		a.name,
+		CASE
+			WHEN a.styleex LIKE '%IsLiteral=1%' THEN 'ev'
+			ELSE 'at'
+		END,
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue,
+		tv5.tagvalue,
+		CASE
+			WHEN tv6.tagvalue LIKE 'http%' THEN REPLACE(REPLACE(tv6.tagvalue, ' ', ''), '|||', '[§,title=Gå til den juridiske kilde] ') || '[§,title=Gå til den juridiske kilde] '
+			ELSE COALESCE(tv6.tagvalue, '')
+		END
+		||
+		CASE
+			WHEN tv7.tagvalue LIKE 'http%' THEN tv7.tagvalue || '[»,title=Gå til kilden] '
+			ELSE COALESCE(tv7.tagvalue, '')
+		END,
+		tv9.tagvalue,
+		tv10.tagvalue
+	FROM
+		t_attribute a
+	INNER JOIN
+		t_object o ON
+		a.object_id = o.object_id
+	LEFT JOIN attribute_tagged_values tv1 ON
+		a.id = tv1.attribute_id
+		AND tv1.tagname = 'prefLabel (da)'
+	LEFT JOIN attribute_tagged_values tv2 ON
+		a.id = tv2.attribute_id
+		AND tv2.tagname = 'definition (da)'
+	LEFT JOIN attribute_tagged_values tv3 ON
+		a.id = tv3.attribute_id
+		AND tv3.tagname = 'comment (da)'
+	LEFT JOIN attribute_tagged_values tv4 ON
+		a.id = tv4.attribute_id
+		AND tv4.tagname = 'example (da)'
+	LEFT JOIN attribute_tagged_values tv5 ON
+		a.id = tv5.attribute_id
+		AND tv5.tagname = 'altLabel (da)'
+	LEFT JOIN attribute_tagged_values tv6 ON
+		a.id = tv6.attribute_id
+		AND tv6.tagname = 'legalSource'
+	LEFT JOIN attribute_tagged_values tv7 ON
+		a.id = tv7.attribute_id
+		AND tv7.tagname = 'source'
+	LEFT JOIN attribute_tagged_values tv9 ON
+		a.id = tv9.attribute_id
+		AND tv9.tagname = 'deprecatedLabel (da)'
+	LEFT JOIN attribute_tagged_values tv10 ON
+		a.id = tv10.attribute_id
+		AND tv10.tagname = 'transliteratedName',
+		modelinfo m
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration')
+UNION ALL
+	SELECT
+		DISTINCT
+		m.text AS "Model",
+		c.sourcerole,
+		'ae',
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue,
+		tv5.tagvalue,
+		CASE
+			WHEN tv6.tagvalue LIKE 'http%' THEN REPLACE(REPLACE(tv6.tagvalue, ' ', ''), '|||', '[§,title=Gå til den juridiske kilde] ') || '[§,title=Gå til den juridiske kilde] '
+			ELSE COALESCE(tv6.tagvalue, '')
+		END
+		||
+		CASE
+			WHEN tv7.tagvalue LIKE 'http%' THEN tv7.tagvalue || '[»,title=Gå til kilden] '
+			ELSE COALESCE(tv7.tagvalue, '')
+		END,
+		tv9.tagvalue,
+		tv10.tagvalue
+	FROM
+		t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	LEFT JOIN associationend_tagged_values tv1 ON
+		c.ea_guid = tv1.connector_guid
+		AND tv1.tagname = 'prefLabel (da)'
+		AND tv1.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		c.ea_guid = tv2.connector_guid
+		AND tv2.tagname = 'definition (da)'
+		AND tv2.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		c.ea_guid = tv3.connector_guid
+		AND tv3.tagname = 'comment (da)'
+		AND tv3.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		c.ea_guid = tv4.connector_guid
+		AND tv4.tagname = 'example (da)'
+		AND tv4.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv5 ON
+		c.ea_guid = tv5.connector_guid
+		AND tv5.tagname = 'altLabel (da)'
+		AND tv5.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv6 ON
+		c.ea_guid = tv6.connector_guid
+		AND tv6.tagname = 'legalSource'
+		AND tv6.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv7 ON
+		c.ea_guid = tv7.connector_guid
+		AND tv7.tagname = 'source'
+		AND tv7.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv9 ON
+		c.ea_guid = tv9.connector_guid
+		AND tv9.tagname = 'deprecatedLabel (da)'
+		AND tv9.baseclass = 'ASSOCIATION_SOURCE'
+	LEFT JOIN associationend_tagged_values tv10 ON
+		c.ea_guid = tv10.connector_guid
+		AND tv10.tagname = 'transliteratedName'
+		AND tv10.baseclass = 'ASSOCIATION_SOURCE',
+		modelinfo m
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.sourcestereotype = 'DKEgenskab'
+UNION
+	SELECT
+		DISTINCT
+		m.text AS "Model",
+		c.destrole,
+		'ae',
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue,
+		tv5.tagvalue,
+		CASE
+			WHEN tv6.tagvalue LIKE 'http%' THEN REPLACE(REPLACE(tv6.tagvalue, ' ', ''), '|||', '[§,title=Gå til den juridiske kilde] ') || '[§,title=Gå til den juridiske kilde] '
+			ELSE COALESCE(tv6.tagvalue, '')
+		END
+		||
+		CASE
+			WHEN tv7.tagvalue LIKE 'http%' THEN tv7.tagvalue || '[»,title=Gå til kilden] '
+			ELSE COALESCE(tv7.tagvalue, '')
+		END,
+		tv9.tagvalue,
+		tv10.tagvalue
+	FROM
+		t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id
+	LEFT JOIN associationend_tagged_values tv1 ON
+		c.ea_guid = tv1.connector_guid
+		AND tv1.tagname = 'prefLabel (da)'
+		AND tv1.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		c.ea_guid = tv2.connector_guid
+		AND tv2.tagname = 'definition (da)'
+		AND tv2.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		c.ea_guid = tv3.connector_guid
+		AND tv3.tagname = 'comment (da)'
+		AND tv3.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		c.ea_guid = tv4.connector_guid
+		AND tv4.tagname = 'example (da)'
+		AND tv4.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv5 ON
+		c.ea_guid = tv5.connector_guid
+		AND tv5.tagname = 'altLabel (da)'
+		AND tv5.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv6 ON
+		c.ea_guid = tv6.connector_guid
+		AND tv6.tagname = 'legalSource'
+		AND tv6.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv7 ON
+		c.ea_guid = tv7.connector_guid
+		AND tv7.tagname = 'source'
+		AND tv7.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv9 ON
+		c.ea_guid = tv9.connector_guid
+		AND tv9.tagname = 'deprecatedLabel (da)'
+		AND tv9.baseclass = 'ASSOCIATION_TARGET'
+	LEFT JOIN associationend_tagged_values tv10 ON
+		c.ea_guid = tv10.connector_guid
+		AND tv10.tagname = 'transliteratedName'
+		AND tv10.baseclass = 'ASSOCIATION_TARGET',
+		modelinfo m
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.deststereotype = 'DKEgenskab'
 );
 </code></pre>
                      </section>
@@ -2390,9 +2791,9 @@ UNION
 		NULL,
 		a.name,
 		CASE
-			WHEN instr(a.styleex, 'IsLiteral=1') = 0 THEN
-				'Attribute'
-			ELSE 'EnumerationLiteral'
+			WHEN a.styleex LIKE '%IsLiteral=1%' THEN
+				'EnumerationLiteral'
+			ELSE 'Attribute'
 		END,
 		a.ea_guid
 	FROM
@@ -2483,30 +2884,30 @@ UNION
 	*
 FROM
 	(
-WITH aliaspositionconnectorend(connector_id, sourcestyle, positionaliassourcestyle, deststyle, positionaliasdeststyle) AS (
-	SELECT
-		connector_id,
-		sourcestyle,
-		INSTR(sourcestyle, 'alias='),
-		deststyle,
-		INSTR(deststyle, 'alias=')
-	FROM
-		t_connector),
-	aliasconnectorend(connector_id, sourcealias, destalias) AS (
+WITH aliasconnectorend AS (
 	SELECT
 		connector_id,
 		CASE
-			WHEN positionaliassourcestyle &gt; 0
-			THEN rtrim(substr(sourcestyle, positionaliassourcestyle - (-6)), ';')
+			WHEN INSTR(sourcestyle, 'alias=') &gt; 0 THEN
+        SUBSTR(
+          sourcestyle,
+          INSTR(sourcestyle, 'alias=') - (-6),
+          INSTR(SUBSTR(sourcestyle, INSTR(sourcestyle, 'alias=') - (-6)), ';') - 1
+        )
 			ELSE NULL
-		END,
+		END AS sourcealias,
 		CASE
-			WHEN positionaliasdeststyle &gt; 0
-			THEN rtrim(substr(deststyle, positionaliasdeststyle - (-6)), ';')
+			WHEN INSTR(deststyle, 'alias=') &gt; 0 THEN
+        SUBSTR(
+          deststyle,
+          INSTR(deststyle, 'alias=') - (-6),
+          INSTR(SUBSTR(deststyle, INSTR(deststyle, 'alias=') - (-6)), ';') - 1
+        )
 			ELSE NULL
-		END
+		END AS destalias
 	FROM
-		aliaspositionconnectorend)
+		t_connector
+)
 	SELECT
 		o.ea_guid AS CLASSGUID,
 		o.object_type AS CLASSTYPE,
@@ -3021,7 +3422,7 @@ INNER JOIN t_package p ON
 WHERE
 		o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.styleex NOT LIKE '%IsLiteral=1%'
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3696,7 +4097,7 @@ INNER JOIN t_package p ON
 WHERE
 		o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND instr(a.styleex, 'IsLiteral=1') = 0
+	AND a.styleex NOT LIKE '%IsLiteral=1%'
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -4566,8 +4967,8 @@ SELECT
 	o.Name,
 	'Attribute',
 	CASE
-		WHEN instr(a.styleex, 'IsLiteral=1') = 0 THEN 'ATTRIBUTE'
-		ELSE 'ENUMERATION_LITERAL'
+		WHEN a.styleex LIKE '%IsLiteral=1%' THEN 'ENUMERATION_LITERAL'
+		ELSE 'ATTRIBUTE'
 	END,
 	NULL,
 	(
