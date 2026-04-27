@@ -13,7 +13,7 @@ elements.
 
 ## Installation
 
-The first option is to import the EA Modelling Tools SQL MDG Technology 
+The first option is to import the EA Modelling Tools SQL MDG Technology File
 (mdg_eamt_sql.xml). Import makes the model searches available in the 
 search category "EA Modelling Tools SQL" in the Find in Project window 
 and makes the search views available under the root-node "EA Modelling 
@@ -260,24 +260,23 @@ above. Keeping the GUIDs improves the traceability of changes.
 
 ## Building
 
-It is a prerequisite that [Saxon](https://www.saxonica.com) is installed
+Prerequisites:
+
+- Java is installed and `JAVA_HOME` is set.
+- [Saxon](https://www.saxonica.com) is installed
  and that the environment variable `SAXON_CP` points to the location of 
 the main Saxon jar file.
 
-Run the [Powershell](https://learn.microsoft.com/en-us/powershell/) 
-scripts from directory `ea-modelling-tools-sql`, not from directory 
-`build`.
-
 ```PowerShell
-.\build\build.ps1 -mdgVersion:a.b.c
+.\build.ps1 -MdgVersion x.y.z
 ```
 
-The scripts are combined into four files:
+The build process generates four artefacts:
 
-1. an MDG Technology (mdg_eamt_sql.xml);
+1. an MDG Technology File (mdg_eamt_sql.xml);
 2. a file containing the searches, following the same structure as in 
 searches exported from EA and as in C:\Users\<username>\AppData\Roaming\Sparx Systems\EA\Search Data\EA_Search.xml
 (ea_search.xml);
 3. a file containing the search views (ea_modelviews.xml), a simple copy of the search views file in the source code;
 4. an HTML file listing all the searches and their comments 
-(ea_search_doc.xhtml).
+(index.html).
