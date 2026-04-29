@@ -1,461 +1,11 @@
-<!DOCTYPE HTML>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
-   <head>
-      <title>EA Modelling Tools SQL</title>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.css">
-      <style>
-                        .grid-container{
-                            display: grid;
-                            gap: var(--gap);
-                            grid-template-columns: 1fr;
-                            height: auto;
-                            
-                            @media (min-width: 55rem) {
-                                grid-template-columns: 2fr 5fr;
-                                height: 100vh;
-                            }
-                        }
-                        #toc {
-                            grid-row: 1;
-                            grid-column: 1;
-                        }
-                        #text {
-                            grid-row: 2;
-                            grid-column: 1;
-                            @media (min-width: 55rem) {
-                                grid-row: 1;
-                                grid-column: 2;
-                            }
-                        }
-                        .grid-container>div{
-                            overflow-y: auto;
-                            @media (min-width: 55rem) {
-                                overflow-y: scroll;
-                            }
-                        }
-                        #toc>nav.ds-nav-vertical {
-                            margin-top: var(--space-md);
-                            text-wrap: wrap;
-                            word-break: break-all;
-                        }
-                        #toc>nav.ds-nav-vertical > *{
-                            border: none
-                        }
-                        #toc>nav.ds-nav-vertical a{
-                            padding: var(--space-sm)
-                        }
-                        section {
-                            margin-bottom: var(--space-lg);
-                        }
-                        pre>code.hljs {
-                            background-color: var(--code-background-color);
-                        }
-                    </style><script type="module">
-                        import {
-                            DSLogo,
-                            DSLogoTitle
-                        } from
-                         ' https://cdn.dataforsyningen.dk/assets/designsystem/v8/designsystem.js ' 
-                        customElements.define('ds-logo', DSLogo)
-                        customElements.define('ds-logo-title', DSLogoTitle)
-                    </script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/idea.min.css"><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/sql.min.js"></script><script>hljs.highlightAll();</script><script type="module">
-                      // Make back/forward internal navigation with browser buttons work properly
-                      const toc = document.getElementById("toc");
-                      const text = document.getElementById("text");
+# EA Modelling Tools SQL
 
-                      // Ensure history.state exists
-                      if (!history.state) {
-                        history.replaceState({ toc: 0, text: 0 }, "");
-                      }
+## `all_attributes_classifier`
 
-                      function saveState() {
-                        const state = {
-                          ...history.state,
-                          toc: toc.scrollTop,
-                          text: text.scrollTop
-                        };
-                        history.replaceState(state, "");
-                      }
+ Find the owned and inherited attributes of the classifier selected in the Project Browser. Association ends are not taken into account. Note: the query contains "level * 2" instead of the usual "level + 1". This is because there is a bug in EA that causes numeric addition not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html. 
 
-                      // Save scroll positions when user scrolls either column
-                      toc.addEventListener("scroll", saveState);
-                      text.addEventListener("scroll", saveState);
-
-                      // Restore positions on back/forward navigation
-                      window.addEventListener("popstate", (event) => {
-                        const state = event.state;
-                        if (state) {
-                          toc.scrollTop = state.toc || 0;
-                          text.scrollTop = state.text || 0;
-                        }
-                      });
-                    </script></head>
-   <body>
-      <header id="header" class="ds-header">
-         <div class="ds-container">
-            <ds-logo-title byline="Agency for Climate Data" title="EA Modelling Tools SQL"></ds-logo-title>
-            <h1>EA Modelling Tools SQL</h1>
-            <p class="manchet">Version 0.14.0</p>
-         </div>
-      </header>
-      <div class="grid-container">
-         <div id="toc" class="ds-padding">
-            <nav class="ds-nav-vertical">
-               <h2>Model searches overview</h2>
-               <ol>
-                  <li><a href="#id_71E5285F-E21B-4b05-BFC2-8C4A1EDD92BD">all_attributes_classifier</a></li>
-                  <li><a href="#id_AF887E0E-D7C7-4258-89E8-77705B195658">associations</a></li>
-                  <li><a href="#id_29C77169-F460-4a6f-ABF6-4301C00A9114">associations_unspecified_direction</a></li>
-                  <li><a href="#id_D62774DC-423F-47fe-9DCF-27A4D0010C6C">attributes_of_enumerations</a></li>
-                  <li><a href="#id_AA5976AE-0569-4eb8-95BD-6E737911EFBA">attributes_size_precision_scale</a></li>
-                  <li><a href="#id_570DEBED-5247-4a74-9D83-3FDCD15C4BCC">attributes_size_precision_scale_export</a></li>
-                  <li><a href="#id_E66A6DD7-0140-4105-876D-7527306A28B1">attributes_with_conflicting_type</a></li>
-                  <li><a href="#id_157E9A64-26FE-40c4-A796-D941F1CE9E61">attributes_with_name_like</a></li>
-                  <li><a href="#id_5B3788E8-8DAB-4ee3-BE1D-F1F2F2627892">attributes_with_spatial_type_19107_ed1</a></li>
-                  <li><a href="#id_E74601A1-84F4-434d-A07F-9A552EB328C5">attributes_with_type_like</a></li>
-                  <li><a href="#id_2131CFDC-3A6F-45c7-9A64-A8AF75664700">attributes_with_type_without_classifier</a></li>
-                  <li><a href="#id_C99541B0-D29E-4d7a-8C9A-73002BDA92D1">attributes_without_type</a></li>
-                  <li><a href="#id_4EFB024C-EA07-4c8a-A68F-EC1FFB18764A">classes_without_context_diagram</a></li>
-                  <li><a href="#id_F75628D7-C615-4593-8E14-998BA91C0F11">classifier_and_ancestors</a></li>
-                  <li><a href="#id_A2BF12A6-EC3A-4f64-91BB-28F54ABFAAC6">classifiers_with_association_ends_with_invalid_names_internal</a></li>
-                  <li><a href="#id_E00E8DC5-FA39-473d-BDDB-4CF5334FFCF3">classifiers_with_association_ends_with_notes</a></li>
-                  <li><a href="#id_0156D080-A649-46b6-9A47-2F4AEF7C1357">classifiers_with_association_ends_with_stereotype_not_from_profile</a></li>
-                  <li><a href="#id_CC607C41-B5A7-49ff-871F-F20E5FAA1392">classifiers_with_associations_or_association_ends_with_duplicate_tags</a></li>
-                  <li><a href="#id_C9D74291-6D97-46af-A1BA-90B4C5F9296A">classifiers_with_associations_with_unspecified_direction</a></li>
-                  <li><a href="#id_48EEA0D3-5401-4aeb-8913-97765C27DC71">classifiers_with_duplicate_names</a></li>
-                  <li><a href="#id_F2E16AC9-F905-4a1e-9AFB-D721E3504EF6">classifiers_with_navigable_association_ends_without_explicit_multiplicity</a></li>
-                  <li><a href="#id_177A5C10-0B77-4d83-9731-8C5008E5C275">constraints</a></li>
-                  <li><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83">context_diagrams_missing_model_elements</a></li>
-                  <li><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B">context_diagrams_superfluous_model_elements</a></li>
-                  <li><a href="#id_4A380D72-860C-41bd-8684-E4719531D67F">data_model_vocabulary_da</a></li>
-                  <li><a href="#id_95A472BB-241F-434a-A85C-64654602C662">dependency_diagram_with_connectors_not_usage_or_notelink</a></li>
-                  <li><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</a></li>
-                  <li><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</a></li>
-                  <li><a href="#id_2FFC9447-4996-4b4d-BCE5-F09A9A619733">diagrams_with_diagramdetails</a></li>
-                  <li><a href="#id_B4D415F5-5EA1-4a48-BDC3-72A51B1380F9">diagrams_with_diagramnotes</a></li>
-                  <li><a href="#id_9BE287B7-E2E0-4db1-ADA0-6FA591597ED6">diagrams_with_invalid_names_da</a></li>
-                  <li><a href="#id_CE1FB2AF-49E3-4402-A446-844A105B6ADB">diagrams_with_invalid_names_en</a></li>
-                  <li><a href="#id_329C6C3B-2A6B-4e9a-B7B5-BA0AE20DE812">duplicate_attributes_classifier</a></li>
-                  <li><a href="#id_FD34C919-C09E-434c-BA0F-0EA32C757B20">enumeration_literals_attributes_with_stereotype_enum</a></li>
-                  <li><a href="#id_EF59B26F-9FB2-4148-92CE-A8C6007C2894">enumeration_literals_two_consecutive_spaces</a></li>
-                  <li><a href="#id_A15C3F56-6674-4283-84B4-45F603E6F5AC">enumeration_literals_with_duplicate_names</a></li>
-                  <li><a href="#id_A9EA95E3-1892-41c3-9950-A392F6A73FE1">model_element_by_guid</a></li>
-                  <li><a href="#id_5A9538FF-0AEE-4a17-8465-B468B510BEEF">model_elements_compare_tagged_value_alias</a></li>
-                  <li><a href="#id_1210D0DF-CE99-4432-AAB2-420796348791">model_elements_custom_stereotype</a></li>
-                  <li><a href="#id_0D3721D9-3668-4cb3-A4A0-49F5E82D7A21">model_elements_duplicate_tags</a></li>
-                  <li><a href="#id_74784D53-56BB-4980-9728-2BAA6655C1C4">model_elements_gisname_transliteratedname_gmlname</a></li>
-                  <li><a href="#id_3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E">model_elements_invalid_names_internal</a></li>
-                  <li><a href="#id_7C0507D3-12B7-4e40-B722-5B046756792F">model_elements_nonpublic_scope</a></li>
-                  <li><a href="#id_217DF831-2BE4-498a-9D5E-3F44F089CB55">model_elements_notes</a></li>
-                  <li><a href="#id_F97DC480-B755-41d6-BD9C-611E4B9CB281">model_elements_notes_not_null_not_empty</a></li>
-                  <li><a href="#id_F1F0C200-A3AC-4fa9-A32B-6B04F753AA43">model_elements_oraclename_transliteratedname_dbname</a></li>
-                  <li><a href="#id_503B657F-D695-4708-8D2A-80A5336139E1">model_elements_stereotype_basicdata1</a></li>
-                  <li><a href="#id_18EFAEBF-FA69-441e-B5A8-35DD082E6709">model_elements_stereotype_not_basicdata2</a></li>
-                  <li><a href="#id_4A308E24-C345-4e8a-9DB8-3A4A807C2CBF">model_elements_stereotype_not_from_profile</a></li>
-                  <li><a href="#id_13B0F7D8-9A9B-4e07-B081-5C40C20D7762">model_elements_stereotypes</a></li>
-                  <li><a href="#id_54A920C9-5DAD-45eb-A251-6536E7E28867">model_elements_tagged_value</a></li>
-                  <li><a href="#id_2229F872-F775-46bd-8E46-47C4D7C5081A">model_elements_tagged_value_export</a></li>
-                  <li><a href="#id_E8B2F87E-BE46-44a9-906B-4AC533900454">model_without_dependency_diagram</a></li>
-                  <li><a href="#id_18DEB9C7-F352-4cfb-8164-2A623A71EA7F">multivalued_attributes</a></li>
-                  <li><a href="#id_294A462A-E312-46f8-9C33-8A38A560DB0B">navigable_association_ends_not_by_reference</a></li>
-                  <li><a href="#id_8223A329-F915-4c93-A2E5-9616D089FFD3">navigable_association_ends_without_role_name</a></li>
-                  <li><a href="#id_D09B12C8-D96B-4c21-8051-5E50B6E59129">objects_language_not_none</a></li>
-                  <li><a href="#id_07644A48-EC19-41fd-8BDA-A5E102912824">optional_properties</a></li>
-                  <li><a href="#id_5372E6FF-5968-40a5-945D-FC1BAC3EDAEF">orphans</a></li>
-                  <li><a href="#id_9A4BFAA3-A26A-4a7c-9436-AB1ACD2610FB">packages_xsdinfo</a></li>
-                  <li><a href="#id_9E962E22-3A09-4101-93FD-DB844439A0D8">profiles_in_model</a></li>
-                  <li><a href="#id_65E539E6-EFC6-477f-866C-09E54F852143">properties_without_explicit_multiplicity</a></li>
-                  <li><a href="#id_43546C28-DA6E-4285-A2B6-4ED16643F995">scripts_and_scriptsgroups_with_scriptgroupname_like</a></li>
-                  <li><a href="#id_EF9F67A0-0C04-4e6f-B7F3-42263D659E43">sequence_numbers_classifier</a></li>
-                  <li><a href="#id_53B8BEFD-51AE-46c5-B57C-63F9FB25E351">sequence_numbers_package</a></li>
-                  <li><a href="#id_733A0DE6-8A15-4472-89AA-6C87921BCCF1">tags_in_model</a></li>
-                  <li><a href="#id_E26817A2-4BBD-4f45-AE27-42C106F455AC">types_for_attributes</a></li>
-                  <li><a href="#id_60F5B7E4-1104-431d-AB58-F858251425DA">types_for_attributes_external</a></li>
-               </ol>
-            </nav>
-         </div>
-         <div id="text">
-            <main>
-               <div class="ds-container">
-                  <section>
-                     <h2>Introduction</h2>
-                     <p>This page gives an overview of all the model searches and model views defined in <a href="https://sparxsystems.com/eahelp/search_view.html" target="_blank" rel="noreferrer noopener">
-                           model searches
-                           <svg xmlns="http://www.w3.org/2000/svg" class="ds-icon" width="29" height="29" viewBox="0 0 29 29" fill="none">
-                              
-                              <g stroke="var(--ds-icon-color, black)" stroke-linejoin="round" stroke-linecap="round" stroke-width="var(--ds-icon-stroke, 1)">
-                                 
-                                 <path d="M24.5 19.5V23.87C24.5 24.57 24.22 25.24 23.73 25.73C23.24 26.22 22.57 26.5 21.87 26.5H5.13C4.43 26.5 3.76 26.22 3.27 25.73C2.78 25.24 2.5 24.57 2.5 23.87V7.13C2.5 6.43 2.78 5.76 3.27 5.27C3.76 4.78 4.43 4.5 5.13 4.5H8.31H9.5M17.5 2.5H26.5M26.5 2.5V11.5M26.5 2.5L14 15"/>
-                                 </g>
-                              </svg></a> and <a href="https://sparxsystems.com/eahelp/model_views.html" target="_blank" rel="noreferrer noopener">
-                           model views
-                           <svg xmlns="http://www.w3.org/2000/svg" class="ds-icon" width="29" height="29" viewBox="0 0 29 29" fill="none">
-                              
-                              <g stroke="var(--ds-icon-color, black)" stroke-linejoin="round" stroke-linecap="round" stroke-width="var(--ds-icon-stroke, 1)">
-                                 
-                                 <path d="M24.5 19.5V23.87C24.5 24.57 24.22 25.24 23.73 25.73C23.24 26.22 22.57 26.5 21.87 26.5H5.13C4.43 26.5 3.76 26.22 3.27 25.73C2.78 25.24 2.5 24.57 2.5 23.87V7.13C2.5 6.43 2.78 5.76 3.27 5.27C3.76 4.78 4.43 4.5 5.13 4.5H8.31H9.5M17.5 2.5H26.5M26.5 2.5V11.5M26.5 2.5L14 15"/>
-                                 </g>
-                              </svg></a> defined in EA Modelling Tools SQL. They can be downloaded for import as
-                        <ul>
-                           <li><a href="./mdg_eamt_sql.xml">non-editable model searches and model views, as part of an MDG</a> (available in the "EA Modelling Tools SQL" search category in the Find in Project window and in the "EA Modelling Tools SQL Views" root node in the Model Views window, respectively)</li>
-                           <li><a href="./ea_search.xml">editable model searches</a> (available in the "My Searches" search category in the Find in Project window)</li>
-                           <li><a href="./ea_modelviews.xml">editable model views</a> (available in the root node "EA Modelling Tools SQL" in the Model Views window)</li>
-                        </ul>
-                     </p>
-                  </section>
-                  <section>
-                     <h2>Model views</h2>
-                     <section>
-                        <h3 id="id_A6473619-0E44-4374-886A-B0BF11302192">Core rules</h3>
-                        <table>
-                           <thead>
-                              <tr>
-                                 <th>Description</th>
-                                 <th>Search</th>
-                                 <th>Search term</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              <tr>
-                                 <td>attributes and enumeration literals with stereotype enum</td>
-                                 <td><a href="#id_FD34C919-C09E-434c-BA0F-0EA32C757B20" aria-label="See search enumeration_literals_attributes_with_stereotype_enum" title="See search enumeration_literals_attributes_with_stereotype_enum">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>attributes of enumerations</td>
-                                 <td><a href="#id_D62774DC-423F-47fe-9DCF-27A4D0010C6C" aria-label="See search attributes_of_enumerations" title="See search attributes_of_enumerations">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>attributes where the type name does not match the type id</td>
-                                 <td><a href="#id_E66A6DD7-0140-4105-876D-7527306A28B1" aria-label="See search attributes_with_conflicting_type" title="See search attributes_with_conflicting_type">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>attributes with a type name but without type id</td>
-                                 <td><a href="#id_2131CFDC-3A6F-45c7-9A64-A8AF75664700" aria-label="See search attributes_with_type_without_classifier" title="See search attributes_with_type_without_classifier">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>attributes without a type</td>
-                                 <td><a href="#id_C99541B0-D29E-4d7a-8C9A-73002BDA92D1" aria-label="See search attributes_without_type" title="See search attributes_without_type">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>attributes without explicitly specified multiplicity</td>
-                                 <td><a href="#id_65E539E6-EFC6-477f-866C-09E54F852143" aria-label="See search properties_without_explicit_multiplicity" title="See search properties_without_explicit_multiplicity">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with association ends with a stereotype not defined in a UML profile</td>
-                                 <td><a href="#id_0156D080-A649-46b6-9A47-2F4AEF7C1357" aria-label="See search classifiers_with_association_ends_with_stereotype_not_from_profile" title="See search classifiers_with_association_ends_with_stereotype_not_from_profile">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with association ends with invalid names</td>
-                                 <td><a href="#id_A2BF12A6-EC3A-4f64-91BB-28F54ABFAAC6" aria-label="See search classifiers_with_association_ends_with_invalid_names_internal" title="See search classifiers_with_association_ends_with_invalid_names_internal">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with association ends with notes</td>
-                                 <td><a href="#id_E00E8DC5-FA39-473d-BDDB-4CF5334FFCF3" aria-label="See search classifiers_with_association_ends_with_notes" title="See search classifiers_with_association_ends_with_notes">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with associations or association ends with duplicate tags</td>
-                                 <td><a href="#id_CC607C41-B5A7-49ff-871F-F20E5FAA1392" aria-label="See search classifiers_with_associations_or_association_ends_with_duplicate_tags" title="See search classifiers_with_associations_or_association_ends_with_duplicate_tags">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with associations with unspecified direction</td>
-                                 <td><a href="#id_C9D74291-6D97-46af-A1BA-90B4C5F9296A" aria-label="See search classifiers_with_associations_with_unspecified_direction" title="See search classifiers_with_associations_with_unspecified_direction">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with duplicate names</td>
-                                 <td><a href="#id_48EEA0D3-5401-4aeb-8913-97765C27DC71" aria-label="See search classifiers_with_duplicate_names" title="See search classifiers_with_duplicate_names">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers with navigable association ends without explicitly specified multiplicity</td>
-                                 <td><a href="#id_F2E16AC9-F905-4a1e-9AFB-D721E3504EF6" aria-label="See search classifiers_with_navigable_association_ends_without_explicit_multiplicity" title="See search classifiers_with_navigable_association_ends_without_explicit_multiplicity">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>classifiers, attributes and enumeration literals with invalid names</td>
-                                 <td><a href="#id_3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E" aria-label="See search model_elements_invalid_names_internal" title="See search model_elements_invalid_names_internal">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with associations with inconsistent reading directions</td>
-                                 <td><a href="#id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36" aria-label="See search diagrams_with_associations_with_inconsistent_reading_directions" title="See search diagrams_with_associations_with_inconsistent_reading_directions">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with associations with unspecified reading directions</td>
-                                 <td><a href="#id_2E95F88F-124D-40f4-9987-264B398685B8" aria-label="See search diagrams_with_associations_with_unspecified_reading_directions" title="See search diagrams_with_associations_with_unspecified_reading_directions">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with diagram details</td>
-                                 <td><a href="#id_2FFC9447-4996-4b4d-BCE5-F09A9A619733" aria-label="See search diagrams_with_diagramdetails" title="See search diagrams_with_diagramdetails">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with diagram notes</td>
-                                 <td><a href="#id_B4D415F5-5EA1-4a48-BDC3-72A51B1380F9" aria-label="See search diagrams_with_diagramnotes" title="See search diagrams_with_diagramnotes">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>enumeration literals with duplicate names</td>
-                                 <td><a href="#id_A15C3F56-6674-4283-84B4-45F603E6F5AC" aria-label="See search enumeration_literals_with_duplicate_names" title="See search enumeration_literals_with_duplicate_names">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>enumeration literals with names with two consecutive spaces</td>
-                                 <td><a href="#id_EF59B26F-9FB2-4148-92CE-A8C6007C2894" aria-label="See search enumeration_literals_two_consecutive_spaces" title="See search enumeration_literals_two_consecutive_spaces">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>objects not on any diagram</td>
-                                 <td><a href="#id_5372E6FF-5968-40a5-945D-FC1BAC3EDAEF" aria-label="See search orphans" title="See search orphans">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages and classifiers that are language-specific</td>
-                                 <td><a href="#id_D09B12C8-D96B-4c21-8051-5E50B6E59129" aria-label="See search objects_language_not_none" title="See search objects_language_not_none">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages, classifiers and attributes with a scope that is not Public</td>
-                                 <td><a href="#id_7C0507D3-12B7-4e40-B722-5B046756792F" aria-label="See search model_elements_nonpublic_scope" title="See search model_elements_nonpublic_scope">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages, classifiers, attributes and enumeration literals with a custom stereotype</td>
-                                 <td><a href="#id_1210D0DF-CE99-4432-AAB2-420796348791" aria-label="See search model_elements_custom_stereotype" title="See search model_elements_custom_stereotype">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages, classifiers, attributes and enumeration literals with a stereotype not defined
-                                    in a UML profile</td>
-                                 <td><a href="#id_4A308E24-C345-4e8a-9DB8-3A4A807C2CBF" aria-label="See search model_elements_stereotype_not_from_profile" title="See search model_elements_stereotype_not_from_profile">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages, classifiers, attributes and enumeration literals with duplicate tags</td>
-                                 <td><a href="#id_0D3721D9-3668-4cb3-A4A0-49F5E82D7A21" aria-label="See search model_elements_duplicate_tags" title="See search model_elements_duplicate_tags">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>packages, classifiers, attributes and enumeration literals with notes</td>
-                                 <td><a href="#id_F97DC480-B755-41d6-BD9C-611E4B9CB281" aria-label="See search model_elements_notes_not_null_not_empty" title="See search model_elements_notes_not_null_not_empty">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                           </tbody>
-                        </table>
-                     </section>
-                     <section>
-                        <h3 id="id_33E258A9-AB30-4f2a-A736-794F6A6B44C6">Diagram rules for models in Danish</h3>
-                        <table>
-                           <thead>
-                              <tr>
-                                 <th>Description</th>
-                                 <th>Search</th>
-                                 <th>Search term</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              <tr>
-                                 <td>classes without context diagrams (Danish)</td>
-                                 <td><a href="#id_4EFB024C-EA07-4c8a-A68F-EC1FFB18764A" aria-label="See search classes_without_context_diagram" title="See search classes_without_context_diagram">see search details</a></td>
-                                 <td>Kontekstdiagram</td>
-                              </tr>
-                              <tr>
-                                 <td>context diagrams missing model elements (Danish)</td>
-                                 <td><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83" aria-label="See search context_diagrams_missing_model_elements" title="See search context_diagrams_missing_model_elements">see search details</a></td>
-                                 <td>Kontekstdiagram</td>
-                              </tr>
-                              <tr>
-                                 <td>context diagrams with superfluous model elements (Danish)</td>
-                                 <td><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B" aria-label="See search context_diagrams_superfluous_model_elements" title="See search context_diagrams_superfluous_model_elements">see search details</a></td>
-                                 <td>Kontekstdiagram</td>
-                              </tr>
-                              <tr>
-                                 <td>dependency diagrams with connectors of the wrong type (Danish)</td>
-                                 <td><a href="#id_95A472BB-241F-434a-A85C-64654602C662" aria-label="See search dependency_diagram_with_connectors_not_usage_or_notelink" title="See search dependency_diagram_with_connectors_not_usage_or_notelink">see search details</a></td>
-                                 <td>Pakkeafhængigheder</td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with invalid names (Danish)</td>
-                                 <td><a href="#id_9BE287B7-E2E0-4db1-ADA0-6FA591597ED6" aria-label="See search diagrams_with_invalid_names_da" title="See search diagrams_with_invalid_names_da">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>model without dependency diagram (Danish)</td>
-                                 <td><a href="#id_E8B2F87E-BE46-44a9-906B-4AC533900454" aria-label="See search model_without_dependency_diagram" title="See search model_without_dependency_diagram">see search details</a></td>
-                                 <td>Pakkeafhængigheder</td>
-                              </tr>
-                           </tbody>
-                        </table>
-                     </section>
-                     <section>
-                        <h3 id="id_527BC9C7-4EB1-4cc5-A267-AAE494D306EF">Diagram rules for models in English</h3>
-                        <table>
-                           <thead>
-                              <tr>
-                                 <th>Description</th>
-                                 <th>Search</th>
-                                 <th>Search term</th>
-                              </tr>
-                           </thead>
-                           <tbody>
-                              <tr>
-                                 <td>classes without context diagrams (English)</td>
-                                 <td><a href="#id_4EFB024C-EA07-4c8a-A68F-EC1FFB18764A" aria-label="See search classes_without_context_diagram" title="See search classes_without_context_diagram">see search details</a></td>
-                                 <td>Context diagram</td>
-                              </tr>
-                              <tr>
-                                 <td>context diagrams missing model elements (English)</td>
-                                 <td><a href="#id_A49ED812-771C-4458-AEBF-D7B72032FA83" aria-label="See search context_diagrams_missing_model_elements" title="See search context_diagrams_missing_model_elements">see search details</a></td>
-                                 <td>Context diagram</td>
-                              </tr>
-                              <tr>
-                                 <td>context diagrams with superfluous model elements (English)</td>
-                                 <td><a href="#id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B" aria-label="See search context_diagrams_superfluous_model_elements" title="See search context_diagrams_superfluous_model_elements">see search details</a></td>
-                                 <td>Context diagram</td>
-                              </tr>
-                              <tr>
-                                 <td>dependency diagrams with connectors of the wrong type (English)</td>
-                                 <td><a href="#id_95A472BB-241F-434a-A85C-64654602C662" aria-label="See search dependency_diagram_with_connectors_not_usage_or_notelink" title="See search dependency_diagram_with_connectors_not_usage_or_notelink">see search details</a></td>
-                                 <td>Package dependencies</td>
-                              </tr>
-                              <tr>
-                                 <td>diagrams with invalid names (English)</td>
-                                 <td><a href="#id_CE1FB2AF-49E3-4402-A446-844A105B6ADB" aria-label="See search diagrams_with_invalid_names_en" title="See search diagrams_with_invalid_names_en">see search details</a></td>
-                                 <td></td>
-                              </tr>
-                              <tr>
-                                 <td>model without dependency diagram (English)</td>
-                                 <td><a href="#id_E8B2F87E-BE46-44a9-906B-4AC533900454" aria-label="See search model_without_dependency_diagram" title="See search model_without_dependency_diagram">see search details</a></td>
-                                 <td>Package dependencies</td>
-                              </tr>
-                           </tbody>
-                        </table>
-                     </section>
-                  </section>
-                  <section>
-                     <h2>Model searches details</h2>
-                     <section>
-                        <h3 id="id_71E5285F-E21B-4b05-BFC2-8C4A1EDD92BD">all_attributes_classifier</h3>
-                        <p> Find the owned and inherited attributes of the classifier selected in the Project
-                           Browser. Association ends are not taken into account. Note: the query contains "level
-                           * 2" instead of the usual "level + 1". This is because there is a bug in EA that causes
-                           numeric addition not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+```sql
+SELECT
 	*
 FROM
 	(
@@ -513,12 +63,15 @@ ON
 	ORDER BY
 		LEVEL DESC
 );
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_AF887E0E-D7C7-4258-89E8-77705B195658">associations</h3>
-                        <p> Find all associations in the selected package and its subpackages. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `associations`
+
+ Find all associations in the selected package and its subpackages. 
+
+```sql
+SELECT
 	c.ea_guid AS CLASSGUID,
 	c.connector_type AS CLASSTYPE,
 	't_connector' AS CLASSTABLE,
@@ -551,12 +104,15 @@ WHERE
 			AND c.subtype = 'Strong'))
 ORDER BY
 	c.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_29C77169-F460-4a6f-ABF6-4301C00A9114">associations_unspecified_direction</h3>
-                        <p> Find the associations that have an unspecified direction. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `associations_unspecified_direction`
+
+ Find the associations that have an unspecified direction. 
+
+```sql
+SELECT
 	c.ea_guid AS CLASSGUID,
 	c.connector_type AS CLASSTYPE,
 	't_connector' AS CLASSTABLE,
@@ -586,14 +142,15 @@ WHERE
 	AND c.Direction = 'Unspecified'
 ORDER BY
 	c.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_D62774DC-423F-47fe-9DCF-27A4D0010C6C">attributes_of_enumerations</h3>
-                        <p> Find the attributes that belong to enumerations. Typically, enumerations only have
-                           enumeration literals, not attributes. In EA, attributes and enumerations are stored
-                           in table t_attribute. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_of_enumerations`
+
+ Find the attributes that belong to enumerations. Typically, enumerations only have enumeration literals, not attributes. In EA, attributes and enumerations are stored in table t_attribute. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -610,14 +167,15 @@ WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type = 'Enumeration'
 	AND a.styleex NOT LIKE '%IsLiteral=1%';
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_AA5976AE-0569-4eb8-95BD-6E737911EFBA">attributes_size_precision_scale</h3>
-                        <p> Finds all the attributes, including their values for tags size, precision and scale,
-                           that have one of the following as type: CharacterString, Decimal, Integer, Real, Measure,
-                           Area, Length, DirectPosition. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_size_precision_scale`
+
+ Finds all the attributes, including their values for tags size, precision and scale, that have one of the following as type: CharacterString, Decimal, Integer, Real, Measure, Area, Length, DirectPosition. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -659,20 +217,15 @@ WHERE
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
 	AND a.styleex NOT LIKE '%IsLiteral=1%'
 	AND a.type in ('CharacterString', 'Decimal', 'Real', 'Integer', 'Measure', 'Area', 'Length', 'DirectPosition');
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_570DEBED-5247-4a74-9D83-3FDCD15C4BCC">attributes_size_precision_scale_export</h3>
-                        <p> Finds all the attributes, including their values for tags size, precision and scale,
-                           that have one of the following as type: CharacterString, Decimal, Integer, Real, Measure,
-                           Area, Length, DirectPosition. The output of this query is the starting point for a
-                           CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript):
-                           (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
-                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
-                           the proposed character set, UTF-16), (3) modify the tagged values as needed and (4)
-                           save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation
-                           mark (") as string delimiter). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_size_precision_scale_export`
+
+ Finds all the attributes, including their values for tags size, precision and scale, that have one of the following as type: CharacterString, Decimal, Integer, Real, Measure, Area, Length, DirectPosition. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	a.ea_guid AS GUID,
 	a.Name AS "UML-NAVN",
@@ -718,17 +271,15 @@ WHERE
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
 	AND a.styleex NOT LIKE '%IsLiteral=1%'
 	AND a.type in ('CharacterString', 'Decimal', 'Real', 'Integer', 'Measure', 'Area', 'Length', 'DirectPosition');
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_E66A6DD7-0140-4105-876D-7527306A28B1">attributes_with_conflicting_type</h3>
-                        <p> Find the attributes that have a conflicting type, where the name of the attribute
-                           type is not equal to the name of the classifier that is specified as the type. This
-                           can for example happen when first a classifier was chosen as type in the dropdown,
-                           and then &lt;none&gt; was chosen as type in the drop-down. To resolve this, change the type
-                           to a data type defined by the language of the element (in the dropdown) and then change
-                           again to &lt;none&gt;. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_with_conflicting_type`
+
+ Find the attributes that have a conflicting type, where the name of the attribute type is not equal to the name of the classifier that is specified as the type. This can for example happen when first a classifier was chosen as type in the dropdown, and then <none> was chosen as type in the drop-down. To resolve this, change the type to a data type defined by the language of the element (in the dropdown) and then change again to <none>. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -752,15 +303,15 @@ WHERE
 ORDER BY
 	p.name,
 	o.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_157E9A64-26FE-40c4-A796-D941F1CE9E61">attributes_with_name_like</h3>
-                        <p> Finds all the attributes with a name like the specified search term. Specify a search
-                           term using the syntax for the LIKE operator as defined by the underlying database
-                           system. E.g. for SQLite: % matches any sequence of zero or more characters in the
-                           string, _ matches any single character in the string. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_with_name_like`
+
+ Finds all the attributes with a name like the specified search term. Specify a search term using the syntax for the LIKE operator as defined by the underlying database system. E.g. for SQLite: % matches any sequence of zero or more characters in the string, _ matches any single character in the string. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -776,15 +327,18 @@ INNER JOIN t_package p ON
 	p.package_id = o.package_id
 WHERE
 	o.package_id IN (#Branch#)
-	AND a.name LIKE '&lt;Search Term&gt;'
+	AND a.name LIKE '<Search Term>'
 ORDER BY
 	a.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_5B3788E8-8DAB-4ee3-BE1D-F1F2F2627892">attributes_with_spatial_type_19107_ed1</h3>
-                        <p> Finds all the attributes that have a type defined in model ISO 19107 Edition 1. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_with_spatial_type_19107_ed1`
+
+ Finds all the attributes that have a type defined in model ISO 19107 Edition 1. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -805,14 +359,15 @@ WHERE
 	AND t.package_id IN (#Branch={BBEF980E-D59E-469d-9164-7A94E1F503C7}#)
 ORDER BY
 	a.type;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_E74601A1-84F4-434d-A07F-9A552EB328C5">attributes_with_type_like</h3>
-                        <p> Specify a search term using the syntax for the LIKE operator as defined by the underlying
-                           database system. E.g. for SQLite: % matches any sequence of zero or more characters
-                           in the string, _ matches any single character in the string. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_with_type_like`
+
+ Specify a search term using the syntax for the LIKE operator as defined by the underlying database system. E.g. for SQLite: % matches any sequence of zero or more characters in the string, _ matches any single character in the string. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -828,16 +383,18 @@ INNER JOIN t_package p ON
 	p.package_id = o.package_id
 WHERE
 	o.package_id IN (#Branch#)
-	AND a.type LIKE '&lt;Search Term&gt;'
+	AND a.type LIKE '<Search Term>'
 ORDER BY
 	a.type;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_2131CFDC-3A6F-45c7-9A64-A8AF75664700">attributes_with_type_without_classifier</h3>
-                        <p> Find the attributes that have a type specified that is not linked to an element (classifier)
-                           in the model. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_with_type_without_classifier`
+
+ Find the attributes that have a type specified that is not linked to an element (classifier) in the model. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -860,13 +417,15 @@ WHERE
 ORDER BY
 	p.name,
 	o.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_C99541B0-D29E-4d7a-8C9A-73002BDA92D1">attributes_without_type</h3>
-                        <p> Find the attributes that have no type specified (&lt;none&gt; was chosen as type in the
-                           drop-down). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `attributes_without_type`
+
+ Find the attributes that have no type specified (<none> was chosen as type in the drop-down). 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -888,16 +447,15 @@ WHERE
 ORDER BY
 	p.name,
 	o.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_4EFB024C-EA07-4c8a-A68F-EC1FFB18764A">classes_without_context_diagram</h3>
-                        <p> Find the classes that do not have a context diagram. A context diagram must be a
-                           class diagram and it must have a name consisting of (1) the term specified as search
-                           term (e.g. "Context diagram" or "Kontekstdiagram") (2) a space and (3) the name of
-                           the class. This query is intended to be used in a model view, where the search term
-                           is fixed and valid only in a given language. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classes_without_context_diagram`
+
+ Find the classes that do not have a context diagram. A context diagram must be a class diagram and it must have a name consisting of (1) the term specified as search term (e.g. "Context diagram" or "Kontekstdiagram") (2) a space and (3) the name of the class. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	o.name
@@ -916,14 +474,16 @@ WHERE
 		do.diagram_id = d.diagram_id
 	WHERE
 		d.diagram_type = 'Logical'
-		AND d.name = #Concat '&lt;Search Term&gt; ', o.name#);
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_F75628D7-C615-4593-8E14-998BA91C0F11">classifier_and_ancestors</h3>
-                        <p> Find (1) the classifier selected in the Project Browser and (2) the ancestors of
-                           that classifier. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+		AND d.name = #Concat '<Search Term> ', o.name#);
+
+```
+
+## `classifier_and_ancestors`
+
+ Find (1) the classifier selected in the Project Browser and (2) the ancestors of that classifier. 
+
+```sql
+SELECT
 	CLASSGUID,
 	CLASSTYPE,
 	name
@@ -961,15 +521,15 @@ UNION ALL
 	FROM
 		self_and_ancestor
 );
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_A2BF12A6-EC3A-4f64-91BB-28F54ABFAAC6">classifiers_with_association_ends_with_invalid_names_internal</h3>
-                        <p> Finds the classifiers for which an opposite association end has a name having characters
-                           that are invalid according to the internal rules of the agency. Model views cannot
-                           show connectors or connector ends, this query can be used in a model view search folder.
-                           See also query model_elements_invalid_names_internal. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classifiers_with_association_ends_with_invalid_names_internal`
+
+ Finds the classifiers for which an opposite association end has a name having characters that are invalid according to the internal rules of the agency. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query model_elements_invalid_names_internal. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1032,14 +592,15 @@ WHERE
 ORDER BY
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_E00E8DC5-FA39-473d-BDDB-4CF5334FFCF3">classifiers_with_association_ends_with_notes</h3>
-                        <p> Finds the classifiers for which an opposite association end has non-null notes. Model
-                           views cannot show connectors or connector ends, this query can be used in a model
-                           view search folder.</p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classifiers_with_association_ends_with_notes`
+
+ Finds the classifiers for which an opposite association end has non-null notes. Model views cannot show connectors or connector ends, this query can be used in a model view search folder.
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1100,15 +661,15 @@ WHERE
 ORDER BY
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_0156D080-A649-46b6-9A47-2F4AEF7C1357">classifiers_with_association_ends_with_stereotype_not_from_profile</h3>
-                        <p> Finds the classifiers for which an opposite association end has a stereotype not
-                           from a UML profile. Model views cannot show connectors or connector ends, this query
-                           can be used in a model view search folder. See also query stereotypes_not_from_profile
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classifiers_with_association_ends_with_stereotype_not_from_profile`
+
+ Finds the classifiers for which an opposite association end has a stereotype not from a UML profile. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query stereotypes_not_from_profile 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1186,15 +747,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_CC607C41-B5A7-49ff-871F-F20E5FAA1392">classifiers_with_associations_or_association_ends_with_duplicate_tags</h3>
-                        <p> Find the classifiers with association ends and relationships that have more than
-                           one tagged value with the same name. Model views cannot show connectors or connector
-                           ends, this query can be used in a model view search folder. See also query model_elements_duplicate_tags.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classifiers_with_associations_or_association_ends_with_duplicate_tags`
+
+ Find the classifiers with association ends and relationships that have more than one tagged value with the same name. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query model_elements_duplicate_tags. 
+
+```sql
+SELECT
 	o_start.ea_guid AS CLASSGUID,
 	o_start.object_type AS CLASSTYPE,
 	o_start.name AS classifier_name,
@@ -1226,7 +787,7 @@ GROUP BY
 	c.name,
 	ct.property
 HAVING
-	count(ct.property) &gt; 1
+	count(ct.property) > 1
 UNION ALL
 SELECT
 	o_end.ea_guid,
@@ -1261,7 +822,7 @@ GROUP BY
 	c.sourcerole,
 	tv.tagvalue
 HAVING
-	count(tv.tagvalue) &gt; 1
+	count(tv.tagvalue) > 1
 UNION ALL
 SELECT
 	o_start.ea_guid,
@@ -1296,15 +857,16 @@ GROUP BY
 	c.destrole,
 	tv.tagvalue
 HAVING
-	count(tv.tagvalue) &gt; 1;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_C9D74291-6D97-46af-A1BA-90B4C5F9296A">classifiers_with_associations_with_unspecified_direction</h3>
-                        <p> Find the classifiers with associations that have an unspecified direction. Model
-                           views cannot show connectors or connector ends, this query can be used in a model
-                           view search folder. See also query associations_unspecified_direction. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+	count(tv.tagvalue) > 1;
+
+```
+
+## `classifiers_with_associations_with_unspecified_direction`
+
+ Find the classifiers with associations that have an unspecified direction. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query associations_unspecified_direction. 
+
+```sql
+SELECT
 	o_start.ea_guid AS CLASSGUID,
 	o_start.object_type AS CLASSTYPE,
 	c.name AS association_name,
@@ -1333,19 +895,15 @@ WHERE
 	AND c.Direction = 'Unspecified'
 ORDER BY
 	c.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_48EEA0D3-5401-4aeb-8913-97765C27DC71">classifiers_with_duplicate_names</h3>
-                        <p> Find the classifiers that have the same name as another classifier in the given package
-                           and its subpackages. This interpretation is stricter than the UML 2.5.1 specification,
-                           where a package is a namespace, and its subpackages are other namespaces. This query
-                           also finds the classifiers that have the same name but are of a different kind. This
-                           interpretation is stricter than the UML 2.5.1 specification, that permits named elements
-                           to have the same name if they are of a different kind. See operation isDistinguishableFrom()
-                           in clause 7.8.9.7, operation membersAreDistinguishable() in clause 7.8.10.8 and constraint
-                           members_distinguisable in clause 7.8.10.7. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `classifiers_with_duplicate_names`
+
+ Find the classifiers that have the same name as another classifier in the given package and its subpackages. This interpretation is stricter than the UML 2.5.1 specification, where a package is a namespace, and its subpackages are other namespaces. This query also finds the classifiers that have the same name but are of a different kind. This interpretation is stricter than the UML 2.5.1 specification, that permits named elements to have the same name if they are of a different kind. See operation isDistinguishableFrom() in clause 7.8.9.7, operation membersAreDistinguishable() in clause 7.8.10.8 and constraint members_distinguisable in clause 7.8.10.7. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	o.name,
@@ -1365,17 +923,16 @@ WHERE
 	WHERE
 		o2.package_id IN (#Branch#)
 			AND o2.name = o.name
-			AND o2.ea_guid &lt;&gt; o.ea_guid);
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_F2E16AC9-F905-4a1e-9AFB-D721E3504EF6">classifiers_with_navigable_association_ends_without_explicit_multiplicity</h3>
-                        <p> Find classifiers that have properties in the form of navigable association ends that
-                           don't have a multiplicity specified explicitly. If it is not specified, it is assumed
-                           to be 1, according to the UML specification. However, having a explicitly specified
-                           multiplicity is preferable. Model views cannot show connectors or connector ends,
-                           this query can be used in a model view search folder. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+			AND o2.ea_guid <> o.ea_guid);
+
+```
+
+## `classifiers_with_navigable_association_ends_without_explicit_multiplicity`
+
+ Find classifiers that have properties in the form of navigable association ends that don't have a multiplicity specified explicitly. If it is not specified, it is assumed to be 1, according to the UML specification. However, having a explicitly specified multiplicity is preferable. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. 
+
+```sql
+SELECT
 	o_start.ea_guid AS CLASSGUID,
 	o_start.object_type AS CLASSTYPE,
 	o_start.name AS classifier_name,
@@ -1399,7 +956,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 	AND c.destcard IS NULL
 UNION ALL
 SELECT
@@ -1426,20 +983,17 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 	AND c.sourcecard IS NULL;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_177A5C10-0B77-4d83-9731-8C5008E5C275">constraints</h3>
-                        <p> For more information about constraints in t_objectconstraint, see https://sparxsystems.com/eahelp/constraints.html.
-                           For more information about constraints in t_object, see https://sparxsystems.com/eahelp/element_constraint.html.
-                           "constraint" is a reserved word, therefore the square brackets are needed for columns
-                           with name "Constraint". Not (yet?) implemented are the following: (1) take into account
-                           the tables t_attributeconstraints, t_connectorconstraint and t_roleconstraint; (2)
-                           check connectors of type NoteLink and check t_object.PDATA4 to find the model elements
-                           that are constrained by the constraints in t_object. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `constraints`
+
+ For more information about constraints in t_objectconstraint, see https://sparxsystems.com/eahelp/constraints.html. For more information about constraints in t_object, see https://sparxsystems.com/eahelp/element_constraint.html. "constraint" is a reserved word, therefore the square brackets are needed for columns with name "Constraint". Not (yet?) implemented are the following: (1) take into account the tables t_attributeconstraints, t_connectorconstraint and t_roleconstraint; (2) check connectors of type NoteLink and check t_object.PDATA4 to find the model elements that are constrained by the constraints in t_object. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	o.name AS constrained_element_name,
@@ -1463,23 +1017,15 @@ FROM
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type = 'Constraint';
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_A49ED812-771C-4458-AEBF-D7B72032FA83">context_diagrams_missing_model_elements</h3>
-                        <p> Finds the context diagrams for which any of the following is true: (1) the context
-                           diagram name does not indicate a classifier that actually exists in the model; (2)
-                           the context diagram does not actually contain the classifier indicated by the diagram
-                           name; (3) the context diagram does not contain all the classifiers that (a) are the
-                           type of one of the attributes of the central classifier and (b) are defined in the
-                           same model as the central classifier; (4) the context diagram does not contain all
-                           the classifiers that are the type of a navigable association end of the central classifier.
-                           Example for 1: if a context diagram has "MyObject" as central classifier, and if "MyObject"
-                           has an attribute with type "MyDataType", and if "MyDataType" is defined in the same
-                           model as "MyObject", then the context diagram will be returned if "MyDataType" is
-                           not present on the context diagram. This query is intended to be used in a model view,
-                           where the search term is fixed and valid only in a given language. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `context_diagrams_missing_model_elements`
+
+ Finds the context diagrams for which any of the following is true: (1) the context diagram name does not indicate a classifier that actually exists in the model; (2) the context diagram does not actually contain the classifier indicated by the diagram name; (3) the context diagram does not contain all the classifiers that (a) are the type of one of the attributes of the central classifier and (b) are defined in the same model as the central classifier; (4) the context diagram does not contain all the classifiers that are the type of a navigable association end of the central classifier. Example for 1: if a context diagram has "MyObject" as central classifier, and if "MyObject" has an attribute with type "MyDataType", and if "MyDataType" is defined in the same model as "MyObject", then the context diagram will be returned if "MyDataType" is not present on the context diagram. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1491,16 +1037,16 @@ context_diagrams AS (
         't_diagram' AS CLASSTABLE,
         d.diagram_id,
         d.name AS diagram_name,
-        replace(d.name, '&lt;Search Term&gt; ', '') AS central_classifier_name,
+        replace(d.name, '<Search Term> ', '') AS central_classifier_name,
         o.object_id AS central_classifier_id
     FROM
         t_diagram d
     LEFT JOIN t_object o ON
-        d.name = #Concat '&lt;Search Term&gt; ', o.name#
+        d.name = #Concat '<Search Term> ', o.name#
         AND o.package_id IN (#Branch#)
     WHERE
         d.package_id IN (#Branch#)
-        AND d.name LIKE '&lt;Search Term&gt;%'
+        AND d.name LIKE '<Search Term>%'
 ),
 attributes_with_type AS (
 	SELECT
@@ -1547,7 +1093,7 @@ attributes_with_type AS (
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 	SELECT
 		o_end.object_id,
@@ -1574,7 +1120,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 )
 	SELECT
 		d.CLASSGUID,
@@ -1667,17 +1213,15 @@ UNION ALL
 		dl.hidden = 1
 )
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_C1226EAB-1E7A-4dc1-8A9A-5163DFC1236B">context_diagrams_superfluous_model_elements</h3>
-                        <p> Finds the context diagrams for which any of the following is true: (1) the context
-                           diagram contains a data type (an enumeration is a kind of data type) that is not the
-                           type of any of the attributes of the classifiers on the diagram; (2) the context diagram
-                           contains an association that is not an outgoing association of the central classifier.
-                           This query is intended to be used in a model view, where the search term is fixed
-                           and valid only in a given language. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `context_diagrams_superfluous_model_elements`
+
+ Finds the context diagrams for which any of the following is true: (1) the context diagram contains a data type (an enumeration is a kind of data type) that is not the type of any of the attributes of the classifiers on the diagram; (2) the context diagram contains an association that is not an outgoing association of the central classifier. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1688,16 +1232,16 @@ context_diagrams AS (
 		d.diagram_type AS diagram_type,
 		d.diagram_id,
 		d.name AS diagram_name,
-		replace(d.name, '&lt;Search Term&gt; ', '') AS central_classifier_name,
+		replace(d.name, '<Search Term> ', '') AS central_classifier_name,
 		o.object_id AS central_classifier_id
 	FROM
 		t_diagram d
 	LEFT JOIN t_object o ON
-		d.name = #Concat '&lt;Search Term&gt; ', o.name#
+		d.name = #Concat '<Search Term> ', o.name#
 		AND o.package_id IN (#Branch#)
 	WHERE
 		d.package_id IN (#Branch#)
-		AND d.name LIKE '&lt;Search Term&gt;%'
+		AND d.name LIKE '<Search Term>%'
 ),
 	classifiers_on_context_diagrams AS (
 	SELECT
@@ -1759,7 +1303,7 @@ context_diagrams AS (
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 	SELECT
 		o_end.object_id,
@@ -1787,7 +1331,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 ),
 	visible_navigable_association_ends_on_context_diagrams AS (
 	SELECT
@@ -1812,7 +1356,7 @@ UNION ALL
 	FROM
 		classifiers_on_context_diagrams c
 	WHERE
-		c.classifier_id &lt;&gt; c.central_classifier_id
+		c.classifier_id <> c.central_classifier_id
 		AND c.classifier_type IN ('DataType', 'Enumeration')
 		AND c.classifier_id NOT IN (
 		SELECT
@@ -1832,21 +1376,18 @@ UNION ALL
 	FROM
 		visible_navigable_association_ends_on_context_diagrams v
 	WHERE
-		v.start_classifier_id &lt;&gt; v.central_classifier_id
-		AND v.association_direction &lt;&gt; 'Bi-Directional'
+		v.start_classifier_id <> v.central_classifier_id
+		AND v.association_direction <> 'Bi-Directional'
 );
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_4A380D72-860C-41bd-8684-E4719531D67F">data_model_vocabulary_da</h3>
-                        <p> The output of this query is the starting point for a CSV file to either include in
-                           a data vocabulary or use as a standalone data vocabulary written in AsciiDoc: (1)
-                           use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
-                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
-                           the proposed character set, UTF-16), (3) remove any redundant rows (4) save as a CSV
-                           file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark
-                           (") as string delimiter). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `data_model_vocabulary_da`
+
+ The output of this query is the starting point for a CSV file to either include in a data vocabulary or use as a standalone data vocabulary written in AsciiDoc: (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) remove any redundant rows (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -1859,7 +1400,7 @@ object_tagged_values(object_id, tagname, tagvalue) AS (
 	FROM
 		t_objectproperties op
 	WHERE
-		op.value != '&lt;memo&gt;'
+		op.value != '<memo>'
 UNION ALL
 	SELECT
 		op.object_id,
@@ -1868,7 +1409,7 @@ UNION ALL
 	FROM
 		t_objectproperties op
 	WHERE
-		op.value = '&lt;memo&gt;'),
+		op.value = '<memo>'),
 	attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
 	SELECT
 		at.elementid,
@@ -1877,7 +1418,7 @@ UNION ALL
 	FROM
 		t_attributetag at
 	WHERE
-		at.value != '&lt;memo&gt;'
+		at.value != '<memo>'
 UNION ALL
 	SELECT
 		at.elementid,
@@ -1886,7 +1427,7 @@ UNION ALL
 	FROM
 		t_attributetag at
 	WHERE
-		at.value = '&lt;memo&gt;'),
+		at.value = '<memo>'),
 	associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
 	SELECT
 		tv.elementid,
@@ -1901,7 +1442,7 @@ UNION ALL
 		t_taggedvalue tv
 	WHERE
 		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
-			AND instr(tv.notes, '&lt;memo&gt;$ea_notes=') = 0
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
 	UNION ALL
 		SELECT
 			tv.elementid,
@@ -1912,7 +1453,7 @@ UNION ALL
 			t_taggedvalue tv
 		WHERE
 			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
-				AND instr(tv.notes, '&lt;memo&gt;$ea_notes=') = 1),
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1),
 	modellabel(visiblelabel, tooltiplabel) AS (
 	SELECT
 		CASE
@@ -1946,8 +1487,8 @@ UNION ALL
 	modelinfo(text) AS (
 	SELECT
 		CASE
-			WHEN '&lt;Search Term&gt;' = '' THEN m.visiblelabel
-			ELSE '&lt;Search Term&gt;[' || m.visiblelabel || ',title=Læs mere om ' || m.tooltiplabel || ']'
+			WHEN '<Search Term>' = '' THEN m.visiblelabel
+			ELSE '<Search Term>[' || m.visiblelabel || ',title=Læs mere om ' || m.tooltiplabel || ']'
 		END
 	FROM
 		modellabel m
@@ -2235,14 +1776,15 @@ UNION
 				AND c.subtype = 'Strong'))
 		AND c.deststereotype = 'DKEgenskab'
 );
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_95A472BB-241F-434a-A85C-64654602C662">dependency_diagram_with_connectors_not_usage_or_notelink</h3>
-                        <p> Finds the diagrams that contain connectors that have another type than "Usage" or
-                           "NoteLink". See also https://sparxsystems.com/eahelp/usage.html, https://sparxsystems.com/eahelp/notelink_connector.html
-                           and https://sparxsystems.com/eahelp/changeconnectortype.html. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `dependency_diagram_with_connectors_not_usage_or_notelink`
+
+ Finds the diagrams that contain connectors that have another type than "Usage" or "NoteLink". See also https://sparxsystems.com/eahelp/usage.html, https://sparxsystems.com/eahelp/notelink_connector.html and https://sparxsystems.com/eahelp/changeconnectortype.html. 
+
+```sql
+SELECT
 	d.ea_guid AS CLASSGUID,
 	d.diagram_type AS CLASSTYPE,
 	't_diagram' AS CLASSTABLE,
@@ -2265,17 +1807,17 @@ INNER JOIN t_object o_end ON
 		c.end_object_id = o_end.object_id
 WHERE
 	d.package_id IN (#Branch#)
-	AND d.name = #Concat '&lt;Search Term&gt; ', p.name#
+	AND d.name = #Concat '<Search Term> ', p.name#
 	AND c.connector_type NOT IN ('Usage', 'NoteLink')
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_8B4976B0-3E13-4a4f-9384-C41DDA0D3D36">diagrams_with_associations_with_inconsistent_reading_directions</h3>
-                        <p> Finds the diagrams that contain associations whose reading directions are inconsistent
-                           across diagrams. Only diagrams where both the association and its name are visible
-                           are taken into account. This query is useful because EA stores the reading direction
-                           of an association in t_diagramlinks, not in t_connector. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_associations_with_inconsistent_reading_directions`
+
+ Finds the diagrams that contain associations whose reading directions are inconsistent across diagrams. Only diagrams where both the association and its name are visible are taken into account. This query is useful because EA stores the reading direction of an association in t_diagramlinks, not in t_connector. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -2299,7 +1841,7 @@ WITH
 	FROM
 		labelsetposition
 	WHERE
-		position &gt; 0),
+		position > 0),
 	middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
 	SELECT
 		diagramid,
@@ -2328,7 +1870,7 @@ WITH
 	FROM
 		middletoplabel
 	WHERE
-		text &lt;&gt; 'LMT='),
+		text <> 'LMT='),
 	diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (
 	SELECT
 		diagramid,
@@ -2383,21 +1925,21 @@ WITH
 		GROUP BY
 			connector_id
 		HAVING
-			count(DISTINCT reading_direction) &gt; 1)
+			count(DISTINCT reading_direction) > 1)
 	ORDER BY
 		association_name,
 		diagram_name
 )
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_2E95F88F-124D-40f4-9987-264B398685B8">diagrams_with_associations_with_unspecified_reading_directions</h3>
-                        <p> Finds the diagrams that contain associations whose reading direction is unspecified.
-                           Only diagrams where both the association and its name are visible are taken into account.
-                           This query is useful because EA stores the reading direction of an association in
-                           t_diagramlinks, not in t_connector. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_associations_with_unspecified_reading_directions`
+
+ Finds the diagrams that contain associations whose reading direction is unspecified. Only diagrams where both the association and its name are visible are taken into account. This query is useful because EA stores the reading direction of an association in t_diagramlinks, not in t_connector. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -2421,7 +1963,7 @@ WITH
 	FROM
 		labelsetposition
 	WHERE
-		position &gt; 0),
+		position > 0),
 	middletoplabelplus(diagramid, connectorid, connector_is_hidden, text, geometry) AS (
 	SELECT
 		diagramid,
@@ -2450,7 +1992,7 @@ WITH
 	FROM
 		middletoplabel
 	WHERE
-		text &lt;&gt; 'LMT='),
+		text <> 'LMT='),
 	diagramlinkview(diagramid, connectorid, connector_is_hidden, label_is_hidden, direction) AS (
 	SELECT
 		diagramid,
@@ -2492,20 +2034,22 @@ WITH
 	FROM
 		diagrams_with_visible_association_labels d
 	WHERE
-		length(connector_name) &gt; 0
+		length(connector_name) > 0
 		AND reading_direction = 0
 	ORDER BY
 		association_name,
 		diagram_name
 )
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_2FFC9447-4996-4b4d-BCE5-F09A9A619733">diagrams_with_diagramdetails</h3>
-                        <p> Find the diagrams that show the diagram details (see also https://sparxsystems.com/eahelp/appearance_options_diag.html).
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_diagramdetails`
+
+ Find the diagrams that show the diagram details (see also https://sparxsystems.com/eahelp/appearance_options_diag.html). 
+
+```sql
+SELECT
 	d.ea_guid AS CLASSGUID,
 	d.diagram_type AS CLASSTYPE,
 	't_diagram' AS CLASSTABLE,
@@ -2515,13 +2059,15 @@ FROM
 WHERE
 	d.package_id IN (#Branch#)
 	AND d.showdetails = 1;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_B4D415F5-5EA1-4a48-BDC3-72A51B1380F9">diagrams_with_diagramnotes</h3>
-                        <p> Find the diagrams that contains diagram notes, also called a diagram properties note
-                           (see https://sparxsystems.com/eahelp/addpropertiesnote.html). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_diagramnotes`
+
+ Find the diagrams that contains diagram notes, also called a diagram properties note (see https://sparxsystems.com/eahelp/addpropertiesnote.html). 
+
+```sql
+SELECT
 	d.ea_guid AS CLASSGUID,
 	d.diagram_type AS CLASSTYPE,
 	't_diagram' AS CLASSTABLE,
@@ -2541,17 +2087,15 @@ WHERE
 	WHERE
 		do.diagram_id = d.diagram_id
 		AND o.ntype = 18);
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_9BE287B7-E2E0-4db1-ADA0-6FA591597ED6">diagrams_with_invalid_names_da</h3>
-                        <p> The names of the diagrams have to follow a specific pattern to be able to create
-                           a good feature catalogue. The name must start with one of the following (Danish):
-                           'Pakkeafhængigheder', 'Subpakker', 'Oversigtsdiagram' or 'Kontekstdiagram'. The part
-                           of the name after 'Kontekstdiagram' must be equal to the name of an existing object
-                           in the model that the diagram resides in, if the diagram's name starts with 'Kontekstdiagram'.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_invalid_names_da`
+
+ The names of the diagrams have to follow a specific pattern to be able to create a good feature catalogue. The name must start with one of the following (Danish): 'Pakkeafhængigheder', 'Subpakker', 'Oversigtsdiagram' or 'Kontekstdiagram'. The part of the name after 'Kontekstdiagram' must be equal to the name of an existing object in the model that the diagram resides in, if the diagram's name starts with 'Kontekstdiagram'.  
+
+```sql
+SELECT
 	d.ea_guid AS CLASSGUID,
 	d.diagram_type AS CLASSTYPE,
 	't_diagram' AS CLASSTABLE,
@@ -2562,10 +2106,10 @@ INNER JOIN t_package p ON
 	d.package_id = p.package_id
 WHERE
 	d.package_id IN (#Branch#)
-	AND d.name &lt;&gt; #Concat 'Pakkeafhængigheder ', p.name#
-	AND d.name &lt;&gt; #Concat 'Subpakker ', p.name#
-	AND #Substring d.name, 1, 16# &lt;&gt; 'Oversigtsdiagram'
-	AND #Substring d.name, 1, 15# &lt;&gt; 'Kontekstdiagram'
+	AND d.name <> #Concat 'Pakkeafhængigheder ', p.name#
+	AND d.name <> #Concat 'Subpakker ', p.name#
+	AND #Substring d.name, 1, 16# <> 'Oversigtsdiagram'
+	AND #Substring d.name, 1, 15# <> 'Kontekstdiagram'
 UNION ALL
 SELECT
 	d.ea_guid AS CLASSGUID,
@@ -2587,17 +2131,15 @@ WHERE
 			AND #Substring d.name, 17# = o.name)
 ORDER BY
 	2;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_CE1FB2AF-49E3-4402-A446-844A105B6ADB">diagrams_with_invalid_names_en</h3>
-                        <p> The names of the diagrams have to follow a specific pattern to be able to create
-                           a good feature catalogue. The name must start with one of the following (English):
-                           'Package dependencies', 'Subpackages', 'Overview diagram' or 'Context diagram'. The
-                           part of the name after 'Context diagram' must be equal to the name of an existing
-                           object in the model that the diagram resides in, if the diagram's name starts with
-                           'Context diagram'.  </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `diagrams_with_invalid_names_en`
+
+ The names of the diagrams have to follow a specific pattern to be able to create a good feature catalogue. The name must start with one of the following (English): 'Package dependencies', 'Subpackages', 'Overview diagram' or 'Context diagram'. The part of the name after 'Context diagram' must be equal to the name of an existing object in the model that the diagram resides in, if the diagram's name starts with 'Context diagram'.  
+
+```sql
+SELECT
 	d.ea_guid AS CLASSGUID,
 	d.diagram_type AS CLASSTYPE,
 	't_diagram' AS CLASSTABLE,
@@ -2608,10 +2150,10 @@ INNER JOIN t_package p ON
 	d.package_id = p.package_id
 WHERE
 	d.package_id IN (#Branch#)
-	AND d.name &lt;&gt; #Concat 'Package dependencies ', p.name#
-	AND d.name &lt;&gt; #Concat 'Subpackages ', p.name#
-	AND #Substring d.name, 1, 16# &lt;&gt; 'Overview diagram'
-	AND #Substring d.name, 1, 15# &lt;&gt; 'Context diagram'
+	AND d.name <> #Concat 'Package dependencies ', p.name#
+	AND d.name <> #Concat 'Subpackages ', p.name#
+	AND #Substring d.name, 1, 16# <> 'Overview diagram'
+	AND #Substring d.name, 1, 15# <> 'Context diagram'
 UNION ALL
 SELECT
 	d.ea_guid AS CLASSGUID,
@@ -2633,17 +2175,15 @@ WHERE
 			AND #Substring d.name, 17# = o.name)
 ORDER BY
 	2;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_329C6C3B-2A6B-4e9a-B7B5-BA0AE20DE812">duplicate_attributes_classifier</h3>
-                        <p> Find the owned and inherited attributes of the classifier selected in the Project
-                           Browser that have the same name as another attribute of that classifier. Association
-                           ends are not taken into account. Note: the query contains "level * 2" instead of the
-                           usual "level + 1". This is because there is a bug in EA that causes numeric addition
-                           not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `duplicate_attributes_classifier`
+
+ Find the owned and inherited attributes of the classifier selected in the Project Browser that have the same name as another attribute of that classifier. Association ends are not taken into account. Note: the query contains "level * 2" instead of the usual "level + 1". This is because there is a bug in EA that causes numeric addition not to work, see also https://sparxsystems.com/forums/smf/index.php/topic,48040.0.html. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -2711,17 +2251,18 @@ ON
 		GROUP BY
 			property_name
 		HAVING
-			COUNT(*) &gt; 1) a2 ON
+			COUNT(*) > 1) a2 ON
 		a1.property_name = a2.property_name
 )
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_FD34C919-C09E-434c-BA0F-0EA32C757B20">enumeration_literals_attributes_with_stereotype_enum</h3>
-                        <p> Find the enumeration attributes and literals defined that have stereotype "enum".
-                           See also https://sparxsystems.com/forums/smf/index.php/topic,39483.msg243694.html#msg243694.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `enumeration_literals_attributes_with_stereotype_enum`
+
+ Find the enumeration attributes and literals defined that have stereotype "enum". See also https://sparxsystems.com/forums/smf/index.php/topic,39483.msg243694.html#msg243694. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -2743,13 +2284,15 @@ WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type = 'Enumeration'
 	AND x.description LIKE '%Name=enum;%';
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_EF59B26F-9FB2-4148-92CE-A8C6007C2894">enumeration_literals_two_consecutive_spaces</h3>
-                        <p> Find the enumeration literals whose name has two consecutive spaces. The occurrence
-                           of two consecutive spaces is very likely an error. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `enumeration_literals_two_consecutive_spaces`
+
+ Find the enumeration literals whose name has two consecutive spaces. The occurrence of two consecutive spaces is very likely an error. 
+
+```sql
+SELECT
 		a.ea_guid AS CLASSGUID,
 		'Attribute' AS CLASSTYPE,
 		p.name AS package_name,
@@ -2769,16 +2312,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	enumeration_literal_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_A15C3F56-6674-4283-84B4-45F603E6F5AC">enumeration_literals_with_duplicate_names</h3>
-                        <p> Find the enumeration literals that have the same name as another enumeration literal
-                           of the same enumeration. See also the UML 2.5.1 specification, clause 10.2.3.3: An
-                           EnumerationLiteral has a name that shall be used to identify it within its Enumeration.
-                           The EnumerationLiteral name is scoped within and shall be unique within its Enumeration.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `enumeration_literals_with_duplicate_names`
+
+ Find the enumeration literals that have the same name as another enumeration literal of the same enumeration. See also the UML 2.5.1 specification, clause 10.2.3.3: An EnumerationLiteral has a name that shall be used to identify it within its Enumeration. The EnumerationLiteral name is scoped within and shall be unique within its Enumeration. 
+
+```sql
+SELECT
 		a.ea_guid AS CLASSGUID,
 		'Attribute' AS CLASSTYPE,
 		p.name AS package_name,
@@ -2801,18 +2343,20 @@ WHERE
 	WHERE
 		a2.object_id = a.object_id
 		AND a2.name = a.name
-		AND a2.ea_guid &lt;&gt; a.ea_guid )
+		AND a2.ea_guid <> a.ea_guid )
 ORDER BY
 	package_name,
 	classifier_name,
 	enumeration_literal_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_A9EA95E3-1892-41c3-9950-A392F6A73FE1">model_element_by_guid</h3>
-                        <p> Find the model elements with the given GUID. Both the internal GUID format and the
-                           XML format are recognized. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_element_by_guid`
+
+ Find the model elements with the given GUID. Both the internal GUID format and the XML format are recognized. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -2820,9 +2364,9 @@ WITH guid(internal_guid) AS
 	(
 	SELECT
 		CASE
-			WHEN SUBSTR('&lt;Search Term&gt;', 1, 2) = 'EA' THEN
-				'{' || REPLACE(SUBSTR('&lt;Search Term&gt;', 6), '_', '-' ) || '}'
-			ELSE '&lt;Search Term&gt;'
+			WHEN SUBSTR('<Search Term>', 1, 2) = 'EA' THEN
+				'{' || REPLACE(SUBSTR('<Search Term>', 6), '_', '-' ) || '}'
+			ELSE '<Search Term>'
 		END
 	)
 	SELECT
@@ -2942,17 +2486,15 @@ UNION
 			guid)
 )
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_5A9538FF-0AEE-4a17-8465-B468B510BEEF">model_elements_compare_tagged_value_alias</h3>
-                        <p> Finds all model elements in a package and displays (1) their alias, if set and (2)
-                           the value they have for the given tagged value (typically "dbName"), if set. The actual
-                           value is only displayed for tagged values that are not of the memo type. This query
-                           is useful for models where the aliases of the model elements are supposed to be the
-                           same as values of the tag (it is possible to configure to show names and/or aliases
-                           on diagrams, but not single tags, this approach is a workaround). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_compare_tagged_value_alias`
+
+ Finds all model elements in a package and displays (1) their alias, if set and (2) the value they have for the given tagged value (typically "dbName"), if set. The actual value is only displayed for tagged values that are not of the memo type. This query is useful for models where the aliases of the model elements are supposed to be the same as values of the tag (it is possible to configure to show names and/or aliases on diagrams, but not single tags, this approach is a workaround). 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -2960,7 +2502,7 @@ WITH aliasconnectorend AS (
 	SELECT
 		connector_id,
 		CASE
-			WHEN INSTR(sourcestyle, 'alias=') &gt; 0 THEN
+			WHEN INSTR(sourcestyle, 'alias=') > 0 THEN
         SUBSTR(
           sourcestyle,
           INSTR(sourcestyle, 'alias=') - (-6),
@@ -2969,7 +2511,7 @@ WITH aliasconnectorend AS (
 			ELSE NULL
 		END AS sourcealias,
 		CASE
-			WHEN INSTR(deststyle, 'alias=') &gt; 0 THEN
+			WHEN INSTR(deststyle, 'alias=') > 0 THEN
         SUBSTR(
           deststyle,
           INSTR(deststyle, 'alias=') - (-6),
@@ -2986,7 +2528,7 @@ WITH aliasconnectorend AS (
 		NULL AS CLASSTABLE,
 		o.name AS name,
 		p.name AS namespace,
-		op.value AS "&lt;Search Term&gt;",
+		op.value AS "<Search Term>",
 		o.alias AS alias
 	FROM
 		(t_object o
@@ -2994,7 +2536,7 @@ WITH aliasconnectorend AS (
 		o.package_id = p.package_id)
 	LEFT JOIN t_objectproperties op ON
 		op.object_id = o.object_id
-		AND op.property = ('&lt;Search Term&gt;')
+		AND op.property = ('<Search Term>')
 	WHERE
 		o.package_id IN (#Branch#)
 		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -3015,7 +2557,7 @@ UNION ALL
 		p.package_id = o.package_id)
 	LEFT JOIN t_attributetag AT ON
 		a.id = at.elementid
-		AND at.property = '&lt;Search Term&gt;'
+		AND at.property = '<Search Term>'
 	WHERE
 		o.package_id IN (#Branch#)
 		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -3039,7 +2581,7 @@ UNION ALL
 	LEFT JOIN t_taggedvalue tv ON
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = '&lt;Search Term&gt;'
+		AND tv.tagvalue = '<Search Term>'
 	WHERE
 		((o_start.package_id IN (#Branch#)
 			AND o_end.package_id IN (#Branch#)
@@ -3051,7 +2593,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 	SELECT
 		c.ea_guid,
@@ -3072,7 +2614,7 @@ UNION ALL
 	LEFT JOIN t_taggedvalue tv ON
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = '&lt;Search Term&gt;'
+		AND tv.tagvalue = '<Search Term>'
 	WHERE
 		((o_start.package_id IN (#Branch#)
 			AND o_end.package_id IN (#Branch#)
@@ -3084,22 +2626,20 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 )
 ORDER BY
 	namespace,
 	name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_1210D0DF-CE99-4432-AAB2-420796348791">model_elements_custom_stereotype</h3>
-                        <p> Show the model elements with a custom stereotype, that is a stereotype that is (or
-                           at some point was) defined in the project's reference data. See also https://sparxsystems.com/eahelp/creatingcustomstereotypes.html,
-                           table t_stereotypes and query stereotypes. This query is closely related to model_elements_stereotype_not_from_profile.
-                           Usually, this query and model_elements_stereotype_not_from_profile will return the
-                           same results. However, model elements with a stereotype stored as @STEREO;Name=DKEgenskab;GUID={16570901-9E07-4319-81A7-25B52F03CF74};FQName=Grunddata::DKEgenskab;@ENDSTEREO
-                           have been seen in certain models, therefore the split into two queries. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_custom_stereotype`
+
+ Show the model elements with a custom stereotype, that is a stereotype that is (or at some point was) defined in the project's reference data. See also https://sparxsystems.com/eahelp/creatingcustomstereotypes.html, table t_stereotypes and query stereotypes. This query is closely related to model_elements_stereotype_not_from_profile. Usually, this query and model_elements_stereotype_not_from_profile will return the same results. However, model elements with a stereotype stored as @STEREO;Name=DKEgenskab;GUID={16570901-9E07-4319-81A7-25B52F03CF74};FQName=Grunddata::DKEgenskab;@ENDSTEREO have been seen in certain models, therefore the split into two queries. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -3238,13 +2778,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_0D3721D9-3668-4cb3-A4A0-49F5E82D7A21">model_elements_duplicate_tags</h3>
-                        <p> Find the packages, classifiers, properties, enumeration literals and relationships
-                           that have more than one tagged value with the same name. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_duplicate_tags`
+
+ Find the packages, classifiers, properties, enumeration literals and relationships that have more than one tagged value with the same name. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -3265,7 +2807,7 @@ GROUP BY
 	o.name,
 	op.property
 HAVING
-	count(op.property) &gt; 1
+	count(op.property) > 1
 UNION ALL
 SELECT
 	o.ea_guid,
@@ -3286,7 +2828,7 @@ GROUP BY
 	o.name,
 	op.property
 HAVING
-	count(op.property) &gt; 1
+	count(op.property) > 1
 UNION ALL
 SELECT
 	a.ea_guid,
@@ -3308,7 +2850,7 @@ GROUP BY
 	a.name,
 	at.property
 HAVING
-	count(at.property) &gt; 1
+	count(at.property) > 1
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3341,7 +2883,7 @@ GROUP BY
 	c.name,
 	ct.property
 HAVING
-	count(ct.property) &gt; 1
+	count(ct.property) > 1
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3375,7 +2917,7 @@ GROUP BY
 	c.sourcerole,
 	tv.tagvalue
 HAVING
-	count(tv.tagvalue) &gt; 1
+	count(tv.tagvalue) > 1
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3409,15 +2951,16 @@ GROUP BY
 	c.destrole,
 	tv.tagvalue
 HAVING
-	count(tv.tagvalue) &gt; 1;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_74784D53-56BB-4980-9728-2BAA6655C1C4">model_elements_gisname_transliteratedname_gmlname</h3>
-                        <p> Finds all classifiers and properties and the values of tags gisName, transliteratedName
-                           and gmlName. The query only works for tagged values that are not of the memo type.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+	count(tv.tagvalue) > 1;
+
+```
+
+## `model_elements_gisname_transliteratedname_gmlname`
+
+ Finds all classifiers and properties and the values of tags gisName, transliteratedName and gmlName. The query only works for tagged values that are not of the memo type. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -3546,7 +3089,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3598,19 +3141,17 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_3BEE69B0-0F4B-487a-93A0-2FCFD892BC6E">model_elements_invalid_names_internal</h3>
-                        <p> Finds the classifiers, properties and enumeration literals with names having characters
-                           that are invalid according to the internal rules of the agency. In addition, in both
-                           XML and databases, the first character of a name must be alphabetic, and thus not
-                           start with a digit. To ease conversion to XML and database schemas, the first character
-                           of a name in the model has to be alphabetic as well. The latter rule does not apply
-                           to enumeration literals. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_invalid_names_internal`
+
+ Finds the classifiers, properties and enumeration literals with names having characters that are invalid according to the internal rules of the agency. In addition, in both XML and databases, the first character of a name must be alphabetic, and thus not start with a digit. To ease conversion to XML and database schemas, the first character of a name in the model has to be alphabetic as well. The latter rule does not apply to enumeration literals. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -3724,17 +3265,20 @@ INNER JOIN t_package p ON
 WHERE
 		o.package_id IN (#Branch#)
 	AND o.object_type IN ('Enumeration')
-	AND a.name GLOB '*[^a-zA-ZæøåéÆØÅÉ0-9Ωαβ, .():+''&gt;=&lt;&amp;§/_%-]*'
+	AND a.name GLOB '*[^a-zA-ZæøåéÆØÅÉ0-9Ωαβ, .():+''>=<&§/_%-]*'
 ORDER BY
 	package_name,
 	classifier_name,
 	property_or_enumeration_literal_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_7C0507D3-12B7-4e40-B722-5B046756792F">model_elements_nonpublic_scope</h3>
-                        <p> Finds the model elements that do not have their scope set to "Public". </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT * FROM (
+
+```
+
+## `model_elements_nonpublic_scope`
+
+ Finds the model elements that do not have their scope set to "Public". 
+
+```sql
+SELECT * FROM (
 SELECT
 	p.ea_guid AS CLASSGUID,
 	'Package' AS CLASSTYPE,
@@ -3811,7 +3355,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -3840,18 +3384,21 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')))
-	WHERE scope &lt;&gt; 'Public'
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')))
+	WHERE scope <> 'Public'
 ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_217DF831-2BE4-498a-9D5E-3F44F089CB55">model_elements_notes</h3>
-                        <p> Shows the notes on model elements. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_notes`
+
+ Shows the notes on model elements. 
+
+```sql
+SELECT
 	p.ea_guid AS CLASSGUID,
 	'Package' AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -3959,18 +3506,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_F97DC480-B755-41d6-BD9C-611E4B9CB281">model_elements_notes_not_null_not_empty</h3>
-                        <p> Finds the model elements with a note that is not null and not empty. Note: When creating
-                           a new attribute (https://sparxsystems.com/eahelp/attributesmainpage.html), its note
-                           is null until something is written into it. However, when copying an attribute from
-                           another classifier (https://sparxsystems.com/eahelp/copyingattributes.html), the note
-                           of the copy is NOT null, it is an empty string. But then again, when importing a model
-                           from XMI in another project file, all notes are null, even though the attributes originally
-                           were copied. Anyway, this explains the WHERE clause. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_notes_not_null_not_empty`
+
+ Finds the model elements with a note that is not null and not empty. Note: When creating a new attribute (https://sparxsystems.com/eahelp/attributesmainpage.html), its note is null until something is written into it. However, when copying an attribute from another classifier (https://sparxsystems.com/eahelp/copyingattributes.html), the note of the copy is NOT null, it is an empty string. But then again, when importing a model from XMI in another project file, all notes are null, even though the attributes originally were copied. Anyway, this explains the WHERE clause. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -4080,19 +3624,20 @@ UNION ALL
 				AND c.subtype = 'Strong'))
 	)
 WHERE
-	(notes IS NOT NULL AND LENGTH(notes) &gt; 0)
+	(notes IS NOT NULL AND LENGTH(notes) > 0)
 ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_F1F0C200-A3AC-4fa9-A32B-6B04F753AA43">model_elements_oraclename_transliteratedname_dbname</h3>
-                        <p> Finds all classifiers and properties and the values of tags oracleName, transliteratedName
-                           and dbName. The query only works for tagged values that are not of the memo type.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_oraclename_transliteratedname_dbname`
+
+ Finds all classifiers and properties and the values of tags oracleName, transliteratedName and dbName. The query only works for tagged values that are not of the memo type. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -4221,7 +3766,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -4273,15 +3818,17 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 ;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_503B657F-D695-4708-8D2A-80A5336139E1">model_elements_stereotype_basicdata1</h3>
-                        <p> Show the model elements with a stereotype that is defined in the Basic Data 1 profile.
-                           See also query stereotypes. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_stereotype_basicdata1`
+
+ Show the model elements with a stereotype that is defined in the Basic Data 1 profile. See also query stereotypes. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -4379,7 +3926,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 	SELECT
 		c.ea_guid,
@@ -4414,7 +3961,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 )
 WHERE
 	(stereotypes LIKE '%FQName=Grunddata::%')
@@ -4422,14 +3969,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_18EFAEBF-FA69-441e-B5A8-35DD082E6709">model_elements_stereotype_not_basicdata2</h3>
-                        <p> Show the model elements with a stereotype that is not defined in the Basic Data 2
-                           profile and that are not a subpackage of the selected model. See also query stereotypes.
-                           </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_stereotype_not_basicdata2`
+
+ Show the model elements with a stereotype that is not defined in the Basic Data 2 profile and that are not a subpackage of the selected model. See also query stereotypes. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -4527,7 +4075,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 	SELECT
 		c.ea_guid,
@@ -4562,7 +4110,7 @@ UNION ALL
 			OR (o_end.package_id IN (#Branch#)
 				AND c.connector_type = 'Aggregation'
 				AND c.subtype = 'Strong'))
-		AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 )
 WHERE
 	(stereotypes IS NULL
@@ -4571,13 +4119,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_4A308E24-C345-4e8a-9DB8-3A4A807C2CBF">model_elements_stereotype_not_from_profile</h3>
-                        <p> Show the model elements with a stereotype that is not defined in a UML profile and
-                           that are not a subpackage of the selected model. See also query stereotypes. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_stereotype_not_from_profile`
+
+ Show the model elements with a stereotype that is not defined in a UML profile and that are not a subpackage of the selected model. See also query stereotypes. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -4717,17 +4267,15 @@ ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_13B0F7D8-9A9B-4e07-B081-5C40C20D7762">model_elements_stereotypes</h3>
-                        <p> Shows all the stereotypes of the model elements. The stereotypes column contains
-                           all the stereotypes. For each of the stereotypes applied to a model element, a string
-                           like one of the following is present: @STEREO;Name=&lt;stereo&gt;;FQName=&lt;profile_name&gt;::&lt;stereo&gt;;@ENDSTEREO;
-                           (if the stereotype is defined in a UML profile, possibly as part of an MDG) or @STEREO;Name=&lt;stereo&gt;;GUID=&lt;guid&gt;;@ENDSTEREO;
-                           (if the stereotype is a custom stereotype, see https://sparxsystems.com/eahelp/creatingcustomstereotypes.html
-                           and see table t_stereotypes). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_stereotypes`
+
+ Shows all the stereotypes of the model elements. The stereotypes column contains all the stereotypes. For each of the stereotypes applied to a model element, a string like one of the following is present: @STEREO;Name=<stereo>;FQName=<profile_name>::<stereo>;@ENDSTEREO; (if the stereotype is defined in a UML profile, possibly as part of an MDG) or @STEREO;Name=<stereo>;GUID=<guid>;@ENDSTEREO; (if the stereotype is a custom stereotype, see https://sparxsystems.com/eahelp/creatingcustomstereotypes.html and see table t_stereotypes). 
+
+```sql
+SELECT
 	p.ea_guid AS CLASSGUID,
 	'Package' AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -4820,7 +4368,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -4854,24 +4402,26 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 ORDER BY
 	package_name,
 	classifier_name,
 	property_name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_54A920C9-5DAD-45eb-A251-6536E7E28867">model_elements_tagged_value</h3>
-                        <p> Finds all model elements with the given tagged value. The actual value is only displayed
-                           for tagged values that are not of the memo type. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_tagged_value`
+
+ Finds all model elements with the given tagged value. The actual value is only displayed for tagged values that are not of the memo type. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
 	o.name AS name,
 	pp.name AS namespace,
-	op.value AS "&lt;Search Term&gt;"
+	op.value AS "<Search Term>"
 FROM
 	t_object o
 INNER JOIN t_objectproperties op ON
@@ -4883,7 +4433,7 @@ INNER JOIN t_package pp ON
 WHERE
 	p.package_id IN (#Branch#)
 	AND o.object_type IN ('Package')
-	AND op.property = ('&lt;Search Term&gt;')
+	AND op.property = ('<Search Term>')
 UNION ALL
 SELECT
 	o.ea_guid,
@@ -4901,7 +4451,7 @@ INNER JOIN t_package p ON
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND op.property = ('&lt;Search Term&gt;')
+	AND op.property = ('<Search Term>')
 UNION ALL
 SELECT
 	a.ea_guid,
@@ -4918,7 +4468,7 @@ INNER JOIN t_package p ON
 	p.package_id = o.package_id)
 INNER JOIN t_attributetag AT ON
 	(a.id = at.elementid
-		AND at.property = '&lt;Search Term&gt;')
+		AND at.property = '<Search Term>')
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -4939,7 +4489,7 @@ INNER JOIN t_object o_end ON
 INNER JOIN t_taggedvalue tv ON
 	(tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = '&lt;Search Term&gt;')
+		AND tv.tagvalue = '<Search Term>')
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -4951,7 +4501,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -4969,7 +4519,7 @@ INNER JOIN t_object o_end ON
 INNER JOIN t_taggedvalue tv ON
 	(tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = '&lt;Search Term&gt;')
+		AND tv.tagvalue = '<Search Term>')
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -4981,23 +4531,19 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 ORDER BY
 	name,
 	namespace;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_2229F872-F775-46bd-8E46-47C4D7C5081A">model_elements_tagged_value_export</h3>
-                        <p> Finds all classifiers, properties, enumeration literals and connectors with the given
-                           tagged value. The output of this query is the starting point for a CSV file to import
-                           with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use
-                           the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html),
-                           (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep
-                           the proposed character set, UTF-16), (3) modify the tagged values as needed and (4)
-                           save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation
-                           mark (") as string delimiter). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_elements_tagged_value_export`
+
+ Finds all classifiers, properties, enumeration literals and connectors with the given tagged value. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
+
+```sql
+SELECT
 	-- for display in EA
 	o.ea_guid AS CLASSGUID,
 	-- for import of tags via script import-data-model-custom-tags
@@ -5023,7 +4569,7 @@ ORDER BY
 		t_objectproperties op
 	WHERE
 		op.object_id = o.object_id
-		AND op.property = ('&lt;Search Term&gt;')) AS "&lt;Search Term&gt;"
+		AND op.property = ('<Search Term>')) AS "<Search Term>"
 FROM
 	t_object o
 INNER JOIN t_package p ON
@@ -5050,7 +4596,7 @@ SELECT
 		t_attributetag AT
 	WHERE
 		a.id = at.elementid
-		AND at.property = ('&lt;Search Term&gt;'))
+		AND at.property = ('<Search Term>'))
 FROM
 	((t_attribute a
 INNER JOIN t_object o ON
@@ -5078,7 +4624,7 @@ SELECT
 	WHERE
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = ('&lt;Search Term&gt;'))
+		AND tv.tagvalue = ('<Search Term>'))
 FROM
 	((t_connector c
 INNER JOIN t_object o_start ON
@@ -5114,7 +4660,7 @@ SELECT
 	WHERE
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = ('&lt;Search Term&gt;'))
+		AND tv.tagvalue = ('<Search Term>'))
 FROM
 	((t_connector c
 INNER JOIN t_object o_start ON
@@ -5148,7 +4694,7 @@ SELECT
 		t_connectortag ct
 	WHERE
 		ct.elementid = c.connector_id
-		AND ct.property = ('&lt;Search Term&gt;'))
+		AND ct.property = ('<Search Term>'))
 FROM
 	((t_connector c
 INNER JOIN t_object o_start ON
@@ -5166,12 +4712,13 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'));
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_E8B2F87E-BE46-44a9-906B-4AC533900454">model_without_dependency_diagram</h3>
-                        <p></p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `model_without_dependency_diagram`
+
+```sql
+SELECT
 	p.ea_guid AS CLASSGUID,
 	'Package' AS CLASSTYPE,
 	p.name
@@ -5187,14 +4734,16 @@ WHERE
 	WHERE
 		d.package_id = #Package#
 		AND d.Diagram_Type = 'Package'
-		AND d.name = #Concat '&lt;Search Term&gt; ',p.name#
-	);</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_18DEB9C7-F352-4cfb-8164-2A623A71EA7F">multivalued_attributes</h3>
-                        <p> Find all multivalued attributes, that is all attributes with a multiplicity with
-                           an upper bound greater than one. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+		AND d.name = #Concat '<Search Term> ',p.name#
+	);
+```
+
+## `multivalued_attributes`
+
+ Find all multivalued attributes, that is all attributes with a multiplicity with an upper bound greater than one. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	p.name AS package_name,
@@ -5217,13 +4766,15 @@ ORDER BY
 	p.name,
 	o.name,
 	a.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_294A462A-E312-46f8-9C33-8A38A560DB0B">navigable_association_ends_not_by_reference</h3>
-                        <p> Find the navigable association ends that don't have value inlineOrByReference set
-                           to byReference. Aggregations and compositions are not considered in this query. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `navigable_association_ends_not_by_reference`
+
+ Find the navigable association ends that don't have value inlineOrByReference set to byReference. Aggregations and compositions are not considered in this query. 
+
+```sql
+SELECT
 	c.ea_guid AS CLASSGUID,
 	'AssociationEnd' AS CLASSTYPE,
 	't_connector' AS CLASSTABLE,
@@ -5243,7 +4794,7 @@ WHERE
 			AND c.connector_type = 'Association')
 	OR (o_start.package_id IN (#Branch#)
 		AND c.connector_type = 'Association'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 	AND (NOT EXISTS (
 	SELECT
 		*
@@ -5261,7 +4812,7 @@ WHERE
 	WHERE
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = 'inlineOrByReference') &lt;&gt; 'byReference')
+		AND tv.tagvalue = 'inlineOrByReference') <> 'byReference')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -5283,7 +4834,7 @@ WHERE
 			AND c.connector_type = 'Association')
 	OR (o_start.package_id IN (#Branch#)
 		AND c.connector_type = 'Association'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 	AND (NOT EXISTS (
 	SELECT
 		*
@@ -5301,13 +4852,16 @@ WHERE
 	WHERE
 		tv.elementid = c.ea_guid
 		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = 'inlineOrByReference') &lt;&gt; 'byReference');
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_8223A329-F915-4c93-A2E5-9616D089FFD3">navigable_association_ends_without_role_name</h3>
-                        <p> Find the navigable association ends that don't have a role name. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+		AND tv.tagvalue = 'inlineOrByReference') <> 'byReference');
+
+```
+
+## `navigable_association_ends_without_role_name`
+
+ Find the navigable association ends that don't have a role name. 
+
+```sql
+SELECT
 	c.ea_guid AS CLASSGUID,
 	'AssociationEnd' AS CLASSTYPE,
 	't_connector' AS CLASSTABLE,
@@ -5332,7 +4886,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 	AND c.destrole IS NULL
 UNION ALL
 SELECT
@@ -5360,18 +4914,17 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 	AND c.sourcerole IS NULL;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_D09B12C8-D96B-4c21-8051-5E50B6E59129">objects_language_not_none</h3>
-                        <p> Find the elements that are specified as being language-specific, that is, that have
-                           their language not set to "&lt;none&gt;" (see also https://sparxsystems.com/eahelp/generalproperties.html).
-                           Script set-language-none can be used to update these elements. Note: the default language
-                           can be configured in EA. It is a model-specific option, see https://sparxsystems.com/eahelp/code_generation_options.html.
-                           There is no user-specific option to set the default language. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `objects_language_not_none`
+
+ Find the elements that are specified as being language-specific, that is, that have their language not set to "<none>" (see also https://sparxsystems.com/eahelp/generalproperties.html). Script set-language-none can be used to update these elements. Note: the default language can be configured in EA. It is a model-specific option, see https://sparxsystems.com/eahelp/code_generation_options.html. There is no user-specific option to set the default language. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	o.name,
@@ -5383,14 +4936,16 @@ WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface', 'Package')
 	AND (o.gentype IS NULL
-		OR o.gentype &lt;&gt; '&lt;none&gt;');
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_07644A48-EC19-41fd-8BDA-A5E102912824">optional_properties</h3>
-                        <p> Find optional properties, that is properties that have a lower bound of 0. Properties
-                           that are actually conditional because of a constraint are also returned. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+		OR o.gentype <> '<none>');
+
+```
+
+## `optional_properties`
+
+ Find optional properties, that is properties that have a lower bound of 0. Properties that are actually conditional because of a constraint are also returned. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -5429,7 +4984,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction = 'Source -&gt; Destination'
+	AND c.direction = 'Source -> Destination'
 	AND #Substring c.destcard,
 	1,
 	1# = '0'
@@ -5458,19 +5013,22 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction = 'Destination -&gt; Source'
+	AND c.direction = 'Destination -> Source'
 	AND #Substring c.sourcecard,
 	1,
 	1# = '0'
 ORDER BY
 	classifier_name,
 	property;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_5372E6FF-5968-40a5-945D-FC1BAC3EDAEF">orphans</h3>
-                        <p> Find the objects that are not present on any diagram (in the selected package). </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `orphans`
+
+ Find the objects that are not present on any diagram (in the selected package). 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	o.object_type,
@@ -5493,15 +5051,15 @@ WHERE
 	WHERE
 		t_diagram.package_id IN (#Branch#)
 			AND t_diagramobjects.object_id = o.object_id);
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_9A4BFAA3-A26A-4a7c-9436-AB1ACD2610FB">packages_xsdinfo</h3>
-                        <p> Find the packages and the values of their tagged values xmlns, targetNamespace, version,
-                           xsdDocument, xsdEncodingRule. Note: these values can be set directly in a ShapeChange
-                           configuration file instead, via PackageInfo-elements and via the defaultEncodingRule
-                           parameter of the XML schema target. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `packages_xsdinfo`
+
+ Find the packages and the values of their tagged values xmlns, targetNamespace, version, xsdDocument, xsdEncodingRule. Note: these values can be set directly in a ShapeChange configuration file instead, via PackageInfo-elements and via the defaultEncodingRule parameter of the XML schema target. 
+
+```sql
+SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -5559,14 +5117,15 @@ WHERE
 ORDER BY
 	pp.name,
 	o.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_9E962E22-3A09-4101-93FD-DB844439A0D8">profiles_in_model</h3>
-                        <p> Finds all profiles that are defined in the selected package. Profiles are defined
-                           in a tag with name "profiles" and a value consisting of a comma-separated profile
-                           names. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `profiles_in_model`
+
+ Finds all profiles that are defined in the selected package. Profiles are defined in a tag with name "profiles" and a value consisting of a comma-separated profile names. 
+
+```sql
+SELECT
 	*
 FROM
 	(
@@ -5683,15 +5242,15 @@ UNION ALL
 	ORDER BY
 		1
 );
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_65E539E6-EFC6-477f-866C-09E54F852143">properties_without_explicit_multiplicity</h3>
-                        <p> Find the properties of classifiers (not including non-navigable properties) that
-                           don't have a multiplicity specified explicitly. If it is not specified, it is assumed
-                           to be one, according to the UML specification. However, having a explicitly specified
-                           multiplicity is preferable. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `properties_without_explicit_multiplicity`
+
+ Find the properties of classifiers (not including non-navigable properties) that don't have a multiplicity specified explicitly. If it is not specified, it is assumed to be one, according to the UML specification. However, having a explicitly specified multiplicity is preferable. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -5739,7 +5298,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
 	AND c.destcard IS NULL
 UNION ALL
 SELECT
@@ -5770,16 +5329,17 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional'))
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 	AND c.sourcecard IS NULL;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_43546C28-DA6E-4285-A2B6-4ED16643F995">scripts_and_scriptsgroups_with_scriptgroupname_like</h3>
-                        <p> Find the script groups that have a name like the given search term. Find also the
-                           scripts in those script groups. Use search term `eamt-%` to find the scripts and script
-                           groups from EA Modelling Tools JavaScript </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `scripts_and_scriptsgroups_with_scriptgroupname_like`
+
+ Find the script groups that have a name like the given search term. Find also the scripts in those script groups. Use search term `eamt-%` to find the scripts and script groups from EA Modelling Tools JavaScript 
+
+```sql
+SELECT
 	s.ScriptCategory,
 	s.ScriptName,
 	s.ScriptAuthor,
@@ -5788,8 +5348,8 @@ WHERE
 FROM
 	t_script s
 WHERE
-	s.Script LIKE '&lt;Search Term&gt;'
-	AND s.Notes LIKE '&lt;Group%'
+	s.Script LIKE '<Search Term>'
+	AND s.Notes LIKE '<Group%'
 UNION ALL
 SELECT
 	s.ScriptCategory,
@@ -5802,20 +5362,20 @@ FROM
 INNER JOIN t_script s1 ON
 	s1.ScriptName = s.ScriptAuthor
 WHERE
-	s1.script LIKE '&lt;Search Term&gt;'
-	AND s1.Notes LIKE '&lt;Group%'
+	s1.script LIKE '<Search Term>'
+	AND s1.Notes LIKE '<Group%'
 ORDER BY
 	ScriptCategory,
 	ScriptName;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_EF9F67A0-0C04-4e6f-B7F3-42263D659E43">sequence_numbers_classifier</h3>
-                        <p> Find the sequence numbers (tagged value sequenceNumber) of all properties of the
-                           classifier selected in the project browser, ordered by (1) sequence number, (2) by
-                           ordering position (that is, if the sequence number is not available, and this information
-                           is only available for attributes) and (3) by property name. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `sequence_numbers_classifier`
+
+ Find the sequence numbers (tagged value sequenceNumber) of all properties of the classifier selected in the project browser, ordered by (1) sequence number, (2) by ordering position (that is, if the sequence number is not available, and this information is only available for attributes) and (3) by property name. 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -5854,7 +5414,7 @@ LEFT OUTER JOIN t_taggedvalue tv ON
 WHERE
 	o_start.object_id = #CurrentElementID#
 	AND c.connector_type IN ('Association', 'Aggregation')
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -5877,22 +5437,21 @@ LEFT OUTER JOIN t_taggedvalue tv ON
 WHERE
 	o_end.object_id = #CurrentElementID#
 	AND c.connector_type IN ('Association', 'Aggregation')
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 ORDER BY
 	classifier_name,
 	sequenceNumber,
 	ordering_position,
 	property;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_53B8BEFD-51AE-46c5-B57C-63F9FB25E351">sequence_numbers_package</h3>
-                        <p> Find the sequence numbers (tagged value sequenceNumber) of all properties of all
-                           classifiers in the package selected in the project browser, ordered (1) by classifier
-                           name, (2) by sequence number, (3) by ordering position (that is, if the sequence number
-                           is not available, and this information is only available for attributes) and (4) by
-                           property name </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `sequence_numbers_package`
+
+ Find the sequence numbers (tagged value sequenceNumber) of all properties of all classifiers in the package selected in the project browser, ordered (1) by classifier name, (2) by sequence number, (3) by ordering position (that is, if the sequence number is not available, and this information is only available for attributes) and (4) by property name 
+
+```sql
+SELECT
 	a.ea_guid AS CLASSGUID,
 	'Attribute' AS CLASSTYPE,
 	NULL AS CLASSTABLE,
@@ -5942,7 +5501,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Source -&gt; Destination', 'Bi-Directional')
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -5973,19 +5532,21 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND c.direction IN ('Destination -&gt; Source', 'Bi-Directional')
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 ORDER BY
 	classifier_name,
 	sequenceNumber,
 	ordering_position,
 	property;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_733A0DE6-8A15-4472-89AA-6C87921BCCF1">tags_in_model</h3>
-                        <p> Finds all tags that are in use in the selected package. The tags on the package itself
-                           are taken into account as well. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT
+
+```
+
+## `tags_in_model`
+
+ Finds all tags that are in use in the selected package. The tags on the package itself are taken into account as well. 
+
+```sql
+SELECT
 	DISTINCT op.property AS tag
 FROM
 	t_objectproperties op
@@ -6087,15 +5648,15 @@ WHERE
 			AND c.subtype = 'Strong'))
 ORDER BY
 	1;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_E26817A2-4BBD-4f45-AE27-42C106F455AC">types_for_attributes</h3>
-                        <p> Gives all the types used for the attributes in the selected package and its subpackages.
-                           This query assumes that the attributes that have a type specified that is linked to
-                           an element (classifier) in the model, double-check with query attributes_with_type_without_classifier
-                           if needed. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT DISTINCT
+
+```
+
+## `types_for_attributes`
+
+ Gives all the types used for the attributes in the selected package and its subpackages. This query assumes that the attributes that have a type specified that is linked to an element (classifier) in the model, double-check with query attributes_with_type_without_classifier if needed. 
+
+```sql
+SELECT DISTINCT
 	o2.ea_guid AS CLASSGUID,
 	o2.object_type AS CLASSTYPE,
 	o2.name AS type_name
@@ -6111,15 +5672,15 @@ WHERE
 	o.package_id IN (#Branch#)
 ORDER BY
 	o2.name;
-</code></pre>
-                     </section>
-                     <section>
-                        <h3 id="id_60F5B7E4-1104-431d-AB58-F858251425DA">types_for_attributes_external</h3>
-                        <p> Gives all the types that (1) are used for attributes and (2) that are not defined
-                           in the selected package or its subpackages. This query assumes that the attributes
-                           that have a type specified that is linked to an element (classifier) in the model,
-                           double-check with query attributes_with_type_without_classifier if needed. </p>
-                        <pre data-theme="light"><code class="language-sql">SELECT DISTINCT
+
+```
+
+## `types_for_attributes_external`
+
+ Gives all the types that (1) are used for attributes and (2) that are not defined in the selected package or its subpackages. This query assumes that the attributes that have a type specified that is linked to an element (classifier) in the model, double-check with query attributes_with_type_without_classifier if needed. 
+
+```sql
+SELECT DISTINCT
 	o2.ea_guid AS CLASSGUID,
 	o2.object_type AS CLASSTYPE,
 	o2.name AS type_name
@@ -6136,12 +5697,6 @@ WHERE
 	AND o2.package_id NOT IN (#Branch#)
 ORDER BY
 	o2.name;
-</code></pre>
-                     </section>
-                  </section>
-               </div>
-            </main>
-         </div>
-      </div>
-   </body>
-</html>
+
+```
+
