@@ -13,7 +13,7 @@ elements.
 
 ## Installation
 
-The first option is to import the EA Modelling Tools SQL MDG Technology 
+The first option is to import the EA Modelling Tools SQL MDG Technology File
 (mdg_eamt_sql.xml). Import makes the model searches available in the 
 search category "EA Modelling Tools SQL" in the Find in Project window 
 and makes the search views available under the root-node "EA Modelling 
@@ -87,6 +87,11 @@ in the EA User Guide.
 
 ## Writing new queries
 
+### Tables in the EA database schema
+
+The relevant parts of the EA database schema are documented in 
+[EA database schema](docs/database-schema.md).
+
 ### Formatting
 
 The formatting of the queries is not important when running a search 
@@ -99,8 +104,47 @@ In those cases, the query must include the **case sensitive** phrase
 `ea_guid AS CLASSGUID` and the object type (using the alias `CLASSTYPE`).
 Therefore, the queries are formatted with upper case keywords.
 
+Column names in queries are written in lowercase, regardless of the casing 
+in the [EA database schema](docs/database-schema.md).
+
 EA provides no functionality to format queries, this can be done with
 a dedicated database tool.
+
+### `#xxx#` macros
+
+In the WHERE statements `#xxx# macros` can be used as string replacers, 
+so that the same search can be used by different people in different 
+environments. These macros are all case-sensitive.
+
+The most important ones are:
+
+- `#Branch#`: Gets the ID of each child Package under one or more parent Packages, working recursively down to the lowest level of sub-Package.
+  - `IN #Branch#`: Gets the ID of each child Package of the parent Package selected by the user.
+  - `IN #Branch=<GUID>#` or `#Branch=<ID>#`: Gets the ID of each child Package of the parent Package specified by the GUID or ID.
+  - `IN #Branch=<ID>,<ID>,<ID>#`: Gets the ID of each child Package under each parent Package specified by its ID.
+- `#Concat <value1>, <value2>, ...#`: Provides a method of concatenating two or more SQL terms into one string, independent of the database type.
+- `#CurrentElementGUID#`: Gets the ea_guid for the currently-selected element.
+- `#CurrentElementID#`: Gets the Object_ID for the currently selected element.
+- `#Package#`: Gets the Package_ID for the currently-selected Package.
+- `#Substring <field>, <start>#`: Returns the remainder of the field beginning at the 'start' character (1-based)
+- `#Substring <field>, <start>, <count>#`: Returns the "count" number of characters of the field starting at character "start" (1-based).
+
+See the section
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
+
+### Search term
+
+In addition to macros, `<Search Term>` can be used in queries. It gets 
+the value on which to search, from the text entered in the "Search Term"
+ field in the Find in Project view. It therefore functions when an 
+active search is being run and values are being placed in that field. It
+ must appear inside a string, and is required to be in quotes if the 
+value it is being compared with is of type string.
+
+See the section
+[Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
+in the EA User Guide for more information.
 
 ### Column CLASSGUID
 
@@ -211,12 +255,12 @@ UNION ALL
 	SELECT
 		name
 	FROM
-		self_and_ancestors);;
+		self_and_ancestors);
 ```
 
 ### Exporting queries
 
-The queries are exported using the built-in functionality. Each query 
+The queries are exported manually using the built-in functionality. Each query 
 has to be saved in a separate file, to make it easier to track changes.
 
 ## Creating new search views
@@ -260,24 +304,24 @@ above. Keeping the GUIDs improves the traceability of changes.
 
 ## Building
 
-It is a prerequisite that [Saxon](https://www.saxonica.com) is installed
+Prerequisites:
+
+- Java is installed and `JAVA_HOME` is set.
+- [Saxon](https://www.saxonica.com) is installed
  and that the environment variable `SAXON_CP` points to the location of 
 the main Saxon jar file.
 
-Run the [Powershell](https://learn.microsoft.com/en-us/powershell/) 
-scripts from directory `ea-modelling-tools-sql`, not from directory 
-`build`.
-
 ```PowerShell
-.\build\build.ps1 -mdgVersion:a.b.c
+.\build.ps1 -MdgVersion x.y.z
 ```
 
-The scripts are combined into four files:
+The build process generates five artefacts:
 
-1. an MDG Technology (mdg_eamt_sql.xml);
+1. an MDG Technology File (mdg_eamt_sql.xml);
 2. a file containing the searches, following the same structure as in 
 searches exported from EA and as in C:\Users\<username>\AppData\Roaming\Sparx Systems\EA\Search Data\EA_Search.xml
 (ea_search.xml);
 3. a file containing the search views (ea_modelviews.xml), a simple copy of the search views file in the source code;
 4. an HTML file listing all the searches and their comments 
-(ea_search_doc.xhtml).
+(index.html).
+5. a Markdown file listing all the searches and their comments (ea_search_doc.md).
