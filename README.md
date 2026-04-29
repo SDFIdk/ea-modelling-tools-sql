@@ -271,7 +271,7 @@ the main Saxon jar file.
 .\build.ps1 -MdgVersion x.y.z
 ```
 
-The build process generates four artefacts:
+The build process generates five artefacts:
 
 1. an MDG Technology File (mdg_eamt_sql.xml);
 2. a file containing the searches, following the same structure as in 
@@ -280,3 +280,4 @@ searches exported from EA and as in C:\Users\<username>\AppData\Roaming\Sparx Sy
 3. a file containing the search views (ea_modelviews.xml), a simple copy of the search views file in the source code;
 4. an HTML file listing all the searches and their comments 
 (index.html).
+5. a Markdown file listing all the searches and their comments (ea_search_doc.md).

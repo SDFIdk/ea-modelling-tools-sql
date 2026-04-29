@@ -3,3 +3,6 @@
 .settings/
 target/
 *.launch
+
+# Project context for AI (generate from repo files)
+project_context.md
