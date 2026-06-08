@@ -38,7 +38,7 @@ and how to import [model views](https://sparxsystems.com/eahelp/model_views.html
 ### Model searches
 
 Access the search functionality by pressing <kbd>Ctrl</kbd> + 
-<kbd>F</kbd>.
+<kbd>F</kbd>, the "Find in Project" view will then be displayed.
 
 Sparx Systems has published a video about model searches, watch it
 [here](https://sparxsystems.com/resources/show-video.html?video=gettingstarted-modelsearchbasics).
@@ -81,16 +81,24 @@ ends and that matches the associations ends to the classifiers they are
 view based on model search 
 `classifiers_with_navigable_association_ends_without_explicit_multiplicity`.
 
+If the model search underneath the search view returns a model element
+multiple times, that element will only be shown once in the search folder.
+When opening the search, the full results of the search are shown in the
+"Find in Project" view.
+
 See also the section on
 [Model Views](https://sparxsystems.com/eahelp/model_views.html)
 in the EA User Guide.
 
 ## Writing new queries
 
+This sections contains useful information for writing new queries.
+[AGENTS.md](AGENTS.md) contains more detailed guidelines.
+
 ### Tables in the EA database schema
 
 The relevant parts of the EA database schema are documented in 
-[EA database schema](docs/database-schema.md).
+[docs/database-schema.md](docs/database-schema.md).
 
 ### Formatting
 
@@ -112,22 +120,12 @@ a dedicated database tool.
 
 ### `#xxx#` macros
 
-In the WHERE statements `#xxx# macros` can be used as string replacers, 
+`#xxx# macros`, such as `#Branch#` and `#CurrentElementID#`,
+can be used as string replacers, 
 so that the same search can be used by different people in different 
-environments. These macros are all case-sensitive.
+environments.
 
-The most important ones are:
-
-- `#Branch#`: Gets the ID of each child Package under one or more parent Packages, working recursively down to the lowest level of sub-Package.
-  - `IN #Branch#`: Gets the ID of each child Package of the parent Package selected by the user.
-  - `IN #Branch=<GUID>#` or `#Branch=<ID>#`: Gets the ID of each child Package of the parent Package specified by the GUID or ID.
-  - `IN #Branch=<ID>,<ID>,<ID>#`: Gets the ID of each child Package under each parent Package specified by its ID.
-- `#Concat <value1>, <value2>, ...#`: Provides a method of concatenating two or more SQL terms into one string, independent of the database type.
-- `#CurrentElementGUID#`: Gets the ea_guid for the currently-selected element.
-- `#CurrentElementID#`: Gets the Object_ID for the currently selected element.
-- `#Package#`: Gets the Package_ID for the currently-selected Package.
-- `#Substring <field>, <start>#`: Returns the remainder of the field beginning at the 'start' character (1-based)
-- `#Substring <field>, <start>, <count>#`: Returns the "count" number of characters of the field starting at character "start" (1-based).
+The most important macros are listed in [AGENTS.md](AGENTS.md).
 
 See the section
 [Create Search Definitions](https://sparxsystems.com/eahelp/creating_filters.html)
@@ -243,7 +241,7 @@ WITH RECURSIVE self_and_ancestors AS (
 		t_package
 	WHERE
 		t_package.package_id = #Package#
-UNION ALL
+	UNION ALL
 	SELECT
 		p.*
 	FROM
