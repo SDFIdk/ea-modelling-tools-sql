@@ -1779,36 +1779,471 @@ UNION
 
 ```
 
-## `dependency_diagram_with_connectors_not_usage_or_notelink`
+## `dependency_diagrams_missing_model_elements`
 
- Finds the diagrams that contain connectors that have another type than "Usage" or "NoteLink". See also https://sparxsystems.com/eahelp/usage.html, https://sparxsystems.com/eahelp/notelink_connector.html and https://sparxsystems.com/eahelp/changeconnectortype.html. 
+ Finds the dependency diagrams for which any of the following is true: (1) the dependency diagram does not contain the selected model itself; (2) the dependency diagram not contain all the conceptual schemas or standards that the selected model uses; (3) one or more usages modelled between the selected model and the models it uses are not visible; (4) one or more usages between the selected model and the models its uses are not modelled at all and hence missing. The conceptual schemas or standards that the selected model uses can be found with query model_dependencies. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. Note: these modelling rules require that model dependencies are modelled by means of usages (https://www.uml-diagrams.org/dependency.html#usage). 
 
 ```sql
-SELECT
-	d.ea_guid AS CLASSGUID,
-	d.diagram_type AS CLASSTYPE,
-	't_diagram' AS CLASSTABLE,
-	d.name AS diagram_name,
-	c.connector_type,
-	c.direction AS connector_direction,
-	o_start.name AS source_object,
-	o_end.name AS destination_object
-FROM
-	t_diagram d
-INNER JOIN t_package p ON
-	d.package_id = p.package_id
-INNER JOIN t_diagramlinks dl ON
-	d.diagram_id = dl.diagramid
-INNER JOIN t_connector c ON
-	dl.connectorid = c.connector_id
-INNER JOIN t_object o_start ON
+SELECT * FROM (
+	WITH RECURSIVE conceptual_schema_or_standard(package_ea_guid, package_id, name, stereotype) AS (
+	SELECT 
+		p.ea_guid,
+		p.package_id,
+		p.name,
+		o.stereotype
+	FROM
+		t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid
+	WHERE
+		o.stereotype IN ('DKDomænemodel', 'AbstractSchema', 'ApplicationSchema')
+		OR (
+		 EXISTS (
+			SELECT
+				*
+			FROM
+				t_objectproperties op
+			WHERE
+				op.object_id = o.object_id
+				AND lower(op.property) = 'isapplicationsschema'
+				AND op.value = 'true')
+		)
+		OR (
+			EXISTS (
+				SELECT
+					*
+				FROM
+					t_objectproperties op
+				WHERE
+					op.object_id = o.object_id
+					AND op.property = 'name'
+					AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'number'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'yearVersion'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'publicationDate'
+						AND LENGTH(op.value) > 0)
+		)
+	), attribute_type(type_id, type_name, type_package_id) AS (
+		SELECT DISTINCT
+			t.object_id,
+			t.name,
+			t.package_id
+		FROM
+			t_object o
+		INNER JOIN t_attribute a ON
+			o.object_id = a.object_id
+		INNER JOIN t_object t ON
+			a.classifier = t.object_id
+		WHERE
+			o.package_id IN (#Branch#)
+			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+			AND instr(a.styleex, 'IsLiteral=1') = 0
+			AND t.package_id <> o.package_id
+	), attribute_type_package_info(type_id, type_name, package_ea_guid, package_id, package_name, parent_id, level) AS (
+		SELECT
+			attribute_type.type_id,
+			attribute_type.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			1
+		FROM
+			attribute_type
+		INNER JOIN t_package p
+			ON attribute_type.type_package_id = p.package_id
+	UNION ALL
+		SELECT
+			atpi.type_id,
+			atpi.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			atpi.level * 2
+		FROM
+			attribute_type_package_info atpi
+			INNER JOIN t_package p ON
+				atpi.parent_id = p.package_id
+		WHERE atpi.package_id NOT IN (SELECT package_id FROM conceptual_schema_or_standard)
+	), attribute_type_conceptual_schema_or_standard_info(type_id, type_name, package_ea_guid, package_id, package_name) AS (
+		SELECT
+			type_id,
+			type_name,
+			package_ea_guid,
+			package_id,
+			package_name
+		FROM
+			attribute_type_package_info atpi
+		WHERE level = (
+				SELECT max(level)
+				FROM attribute_type_package_info AS atpi2
+				WHERE atpi2.type_id = atpi.type_id
+			)
+	), model_dependencies(package_ea_guid, package_id, package_name) AS (
+	SELECT DISTINCT
+		package_ea_guid,
+		package_id,
+		package_name
+	FROM
+		attribute_type_conceptual_schema_or_standard_info
+	), package_dependency_diagrams(diagram_ea_guid, diagram_type, diagram_id, diagram_name, package_ea_guid, package_id, package_name) AS (
+	SELECT
+		d.ea_guid,
+        d.diagram_type,
+        d.diagram_id,
+        d.name,
+		p.ea_guid,
+		p.package_id,
+		p.name
+    FROM
+        t_diagram d
+	INNER JOIN t_package p ON
+		d.package_id = p.package_id
+    WHERE
+        d.package_id IN (#Branch#)
+        AND d.name = #Concat '<Search Term> ', p.name#
+	)
+	SELECT
+		pdd.diagram_ea_guid AS CLASSGUID,
+		pdd.diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		pdd.diagram_name,
+		#Concat 'Model "', pdd.package_name , '" is missing'# AS info
+	FROM
+		package_dependency_diagrams pdd
+	WHERE NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		INNER JOIN t_object o ON	
+			do.object_id = o.object_id
+		INNER JOIN t_package p ON
+			o.ea_guid = p.ea_guid
+		WHERE
+			do.diagram_id = pdd.diagram_id
+			AND p.package_id = #Package#
+	)
+	UNION ALL
+	SELECT
+		pdd.diagram_ea_guid,
+		pdd.diagram_type,
+		't_diagram',
+		pdd.diagram_name,
+		#Concat 'Model "', md.package_name , '" is missing'#
+	FROM
+		package_dependency_diagrams pdd,
+		model_dependencies md
+	WHERE NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		INNER JOIN t_object o ON	
+			do.object_id = o.object_id
+		WHERE
+			do.diagram_id = pdd.diagram_id
+			AND o.ea_guid = md.package_ea_guid
+	)
+	UNION ALL
+	SELECT
+		pdd.diagram_ea_guid,
+		pdd.diagram_type,
+		't_diagram',
+		pdd.diagram_name,
+		#Concat 'The usage towards "', md.package_name , '" is not visible'#
+	FROM
+		package_dependency_diagrams pdd,
+		model_dependencies md
+	WHERE EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramlinks dl
+		INNER JOIN t_connector c ON	
+			dl.connectorid = c.connector_id
+			AND c.connector_type = 'Usage'
+		INNER JOIN t_object o ON	
+			(c.start_object_id = o.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.end_object_id = o.object_id
+			AND c.direction = 'Destination -> Source')
+		INNER JOIN t_package p ON
+			o.ea_guid = p.ea_guid
+		INNER JOIN t_object o2 ON	
+			(c.end_object_id = o2.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.start_object_id = o2.object_id
+			AND c.direction = 'Destination -> Source')
+		WHERE
+			dl.diagramid = pdd.diagram_id
+			AND p.package_id = #Package#
+			AND o2.ea_guid = md.package_ea_guid
+			AND dl.hidden = 1
+	)
+	UNION ALL
+	SELECT
+		pdd.diagram_ea_guid,
+		pdd.diagram_type,
+		't_diagram',
+		pdd.diagram_name,
+		#Concat 'No usage is present towards "', md.package_name, '"'#
+	FROM
+		package_dependency_diagrams pdd,
+		model_dependencies md
+	WHERE NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_connector c
+		INNER JOIN t_object o ON	
+			(c.start_object_id = o.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.end_object_id = o.object_id
+			AND c.direction = 'Destination -> Source')
+		INNER JOIN t_package p ON
+			o.ea_guid = p.ea_guid
+		INNER JOIN t_object o2 ON	
+			(c.end_object_id = o2.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.start_object_id = o2.object_id
+			AND c.direction = 'Destination -> Source')
+		WHERE
+			c.connector_type = 'Usage'
+			AND p.package_id = #Package#
+			AND o2.ea_guid = md.package_ea_guid
+	)
+);
+
+```
+
+## `dependency_diagrams_superfluous_model_elements`
+
+ Finds the dependency diagrams for which any of the following is true: (1) the diagram contain packages that are not the selected model and not a model dependency; (2) the diagrams contains a connector from or to the selected package that is not a usage and not a note link. The conceptual schemas or standards that the selected model uses can be found with query model_dependencies. This query is intended to be used in a model view, where the search term is fixed and valid only in a given language. Note: these modelling rules require that model dependencies are modelled by means of usages (https://www.uml-diagrams.org/dependency.html#usage). 
+
+```sql
+SELECT * FROM (
+	WITH RECURSIVE conceptual_schema_or_standard(package_ea_guid, package_id, name, stereotype) AS (
+	SELECT 
+		p.ea_guid,
+		p.package_id,
+		p.name,
+		o.stereotype
+	FROM
+		t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid
+	WHERE
+		o.stereotype IN ('DKDomænemodel', 'AbstractSchema', 'ApplicationSchema')
+		OR (
+		 EXISTS (
+			SELECT
+				*
+			FROM
+				t_objectproperties op
+			WHERE
+				op.object_id = o.object_id
+				AND lower(op.property) = 'isapplicationsschema'
+				AND op.value = 'true')
+		)
+		OR (
+			EXISTS (
+				SELECT
+					*
+				FROM
+					t_objectproperties op
+				WHERE
+					op.object_id = o.object_id
+					AND op.property = 'name'
+					AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'number'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'yearVersion'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'publicationDate'
+						AND LENGTH(op.value) > 0)
+		)
+	), attribute_type(type_id, type_name, type_package_id) AS (
+		SELECT DISTINCT
+			t.object_id,
+			t.name,
+			t.package_id
+		FROM
+			t_object o
+		INNER JOIN t_attribute a ON
+			o.object_id = a.object_id
+		INNER JOIN t_object t ON
+			a.classifier = t.object_id
+		WHERE
+			o.package_id IN (#Branch#)
+			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+			AND instr(a.styleex, 'IsLiteral=1') = 0
+			AND t.package_id <> o.package_id
+	), attribute_type_package_info(type_id, type_name, package_ea_guid, package_id, package_name, parent_id, level) AS (
+		SELECT
+			attribute_type.type_id,
+			attribute_type.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			1
+		FROM
+			attribute_type
+		INNER JOIN t_package p
+			ON attribute_type.type_package_id = p.package_id
+	UNION ALL
+		SELECT
+			atpi.type_id,
+			atpi.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			atpi.level * 2
+		FROM
+			attribute_type_package_info atpi
+			INNER JOIN t_package p ON
+				atpi.parent_id = p.package_id
+		WHERE atpi.package_id NOT IN (SELECT package_id FROM conceptual_schema_or_standard)
+	), attribute_type_conceptual_schema_or_standard_info(type_id, type_name, package_ea_guid, package_id, package_name) AS (
+		SELECT
+			type_id,
+			type_name,
+			package_ea_guid,
+			package_id,
+			package_name
+		FROM
+			attribute_type_package_info atpi
+		WHERE level = (
+				SELECT max(level)
+				FROM attribute_type_package_info AS atpi2
+				WHERE atpi2.type_id = atpi.type_id
+			)
+	), model_dependencies(package_ea_guid, package_id, package_name) AS (
+	SELECT DISTINCT
+		package_ea_guid,
+		package_id,
+		package_name
+	FROM
+		attribute_type_conceptual_schema_or_standard_info
+	), package_dependency_diagrams(diagram_ea_guid, diagram_type, diagram_id, diagram_name, package_ea_guid, package_id, package_name) AS (
+	SELECT
+        d.ea_guid,
+        d.diagram_type,
+        d.diagram_id,
+        d.name,
+		p.ea_guid,
+		p.package_id,
+		p.name
+    FROM
+        t_diagram d
+	INNER JOIN t_package p ON
+		d.package_id = p.package_id
+    WHERE
+        d.package_id IN (#Branch#)
+        AND d.name = #Concat '<Search Term> ', p.name#
+	)
+	SELECT
+		pdd.diagram_ea_guid AS CLASSGUID,
+		pdd.diagram_type AS CLASSTYPE,
+		't_diagram' AS CLASSTABLE,
+		pdd.diagram_name,
+		#Concat '"', p.name , '" is not a model dependency'# AS info
+	FROM
+		package_dependency_diagrams pdd,
+		t_package p
+	WHERE
+		EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramobjects do
+		INNER JOIN t_object o ON	
+			do.object_id = o.object_id
+		WHERE
+			do.diagram_id = pdd.diagram_id
+			AND o.ea_guid = p.ea_guid
+			AND p.package_id <> #Package#
+			AND p.ea_guid NOT IN (
+			SELECT
+				package_ea_guid
+			FROM
+				model_dependencies)
+		)
+	UNION ALL
+	SELECT
+		pdd.diagram_ea_guid,
+		pdd.diagram_type,
+		't_diagram',
+		pdd.diagram_name,
+		#Concat 'The connector of type "', c.connector_type , '" between "', o_start.name , '" and ', o_end.name , '" must not be present'#
+	FROM
+		package_dependency_diagrams pdd,
+		(t_connector c
+	INNER JOIN t_object o_start ON
 		c.start_object_id = o_start.object_id
-INNER JOIN t_object o_end ON
-		c.end_object_id = o_end.object_id
-WHERE
-	d.package_id IN (#Branch#)
-	AND d.name = #Concat '<Search Term> ', p.name#
-	AND c.connector_type NOT IN ('Usage', 'NoteLink')
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	WHERE
+		EXISTS (
+		SELECT
+			*
+		FROM
+			t_diagramlinks dl
+		WHERE
+			dl.diagramid = pdd.diagram_id
+			AND dl.connectorid = c.connector_id
+			AND (o_start.ea_guid = pdd.package_ea_guid
+				OR o_end.ea_guid = pdd.package_ea_guid)
+			AND c.connector_type NOT IN ('Usage', 'NoteLink')
+		)
+);
 
 ```
 
@@ -2351,6 +2786,149 @@ ORDER BY
 
 ```
 
+## `model_dependencies`
+
+ Finds all conceptual schemas or standards that a model depends on. 
+
+```sql
+SELECT * FROM (
+	WITH RECURSIVE conceptual_schema_or_standard(package_ea_guid, package_id, name, stereotype) AS (
+	SELECT 
+		p.ea_guid,
+		p.package_id,
+		p.name,
+		o.stereotype
+	FROM
+		t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid
+	WHERE
+		o.stereotype IN ('DKDomænemodel', 'AbstractSchema', 'ApplicationSchema')
+		OR (
+		 EXISTS (
+			SELECT
+				*
+			FROM
+				t_objectproperties op
+			WHERE
+				op.object_id = o.object_id
+				AND lower(op.property) = 'isapplicationsschema'
+				AND op.value = 'true')
+		)
+		OR (
+			EXISTS (
+				SELECT
+					*
+				FROM
+					t_objectproperties op
+				WHERE
+					op.object_id = o.object_id
+					AND op.property = 'name'
+					AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'number'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'yearVersion'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'publicationDate'
+						AND LENGTH(op.value) > 0)
+		)
+	), attribute_type(type_id, type_name, type_package_id) AS (
+		SELECT DISTINCT
+			t.object_id,
+			t.name,
+			t.package_id
+		FROM
+			t_object o
+		INNER JOIN t_attribute a ON
+			o.object_id = a.object_id
+		INNER JOIN t_object t ON
+			a.classifier = t.object_id
+		WHERE
+			o.package_id IN (#Branch#)
+			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+			AND instr(a.styleex, 'IsLiteral=1') = 0
+			AND t.package_id <> o.package_id
+	), attribute_type_package_info(type_id, type_name, package_ea_guid, package_id, package_name, parent_id, level) AS (
+		SELECT
+			attribute_type.type_id,
+			attribute_type.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			1
+		FROM
+			attribute_type
+		INNER JOIN t_package p
+			ON attribute_type.type_package_id = p.package_id
+	UNION ALL
+		SELECT
+			atpi.type_id,
+			atpi.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			atpi.level * 2
+		FROM
+			attribute_type_package_info atpi
+			INNER JOIN t_package p ON
+				atpi.parent_id = p.package_id
+		WHERE atpi.package_id NOT IN (SELECT package_id FROM conceptual_schema_or_standard)
+	), attribute_type_conceptual_schema_or_standard_info(type_id, type_name, package_ea_guid, package_id, package_name) AS (
+		SELECT
+			type_id,
+			type_name,
+			package_ea_guid,
+			package_id,
+			package_name
+		FROM
+			attribute_type_package_info atpi
+		WHERE level = (
+				SELECT max(level)
+				FROM attribute_type_package_info AS atpi2
+				WHERE atpi2.type_id = atpi.type_id
+			)
+	), model_dependencies(package_ea_guid, package_id, package_name) AS (
+	SELECT DISTINCT
+		package_ea_guid,
+		package_id,
+		package_name
+	FROM
+		attribute_type_conceptual_schema_or_standard_info
+	)
+	SELECT
+		package_ea_guid AS CLASSGUID,
+		'Package' AS CLASSTYPE,
+		package_id,
+		package_name
+	FROM
+		model_dependencies
+);
+
+```
+
 ## `model_element_by_guid`
 
  Find the model elements with the given GUID. Both the internal GUID format and the XML format are recognized. 
@@ -2486,6 +3064,302 @@ UNION
 			guid)
 )
 ;
+
+```
+
+## `model_elements_by_fq_stereotype`
+
+ Finds the models elements that have the given fully qualified stereotype name. Comparison of the search term and the model elements stereotypes is done case-sensitively. For more information about the returned columns, see query model_elements_stereotypes. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+	SELECT
+		p.ea_guid AS CLASSGUID,
+		'Package' AS CLASSTYPE,
+		NULL AS CLASSTABLE,
+		p.name AS package_name,
+		NULL AS classifier_name,
+		NULL AS property_name,
+		o.stereotype AS primary_unqualified_stereotype,
+		x.description AS stereotypes
+	FROM
+		(t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid)
+	LEFT JOIN t_xref x ON
+		o.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		p.package_id IN (#Branch#)
+	UNION ALL
+	SELECT
+		o.ea_guid,
+		o.object_type,
+		NULL,
+		p.name,
+		o.name,
+		NULL,
+		o.stereotype,
+		x.description
+	FROM
+		(t_object o
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id)
+	LEFT JOIN t_xref x ON
+		o.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	UNION ALL
+	SELECT
+		a.ea_guid,
+		'Attribute',
+		NULL,
+		p.name,
+		o.name,
+		a.name,
+		a.stereotype,
+		x.description
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		a.object_id = o.object_id)
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id)
+	LEFT JOIN t_xref x ON
+		a.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		p_start.name,
+		o_start.name,
+		c.destrole,
+		c.deststereotype,
+		x.description
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	INNER JOIN t_package p_start ON
+		o_start.package_id = p_start.package_id
+	LEFT JOIN t_xref x
+		ON x.client = c.ea_guid
+		AND x.name = 'Stereotypes'
+		AND x.type = 'connectorDestEnd property'
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
+	UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		p_end.name,
+		o_end.name,
+		c.sourcerole,
+		c.sourcestereotype,
+		x.description
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	INNER JOIN t_package p_end ON
+		o_end.package_id = p_end.package_id
+	LEFT JOIN t_xref x
+		ON x.client = c.ea_guid
+		AND x.name = 'Stereotypes'
+		AND x.type = 'connectorSrcEnd property'
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
+	)
+WHERE
+	stereotypes GLOB '*;FQName=<Search Term>;*'
+ORDER BY
+	package_name,
+	classifier_name,
+	property_name;
+
+```
+
+## `model_elements_by_unq_stereotype`
+
+ Finds the models elements that have the given stereotype name. Comparison of the search term and the model elements stereotypes is done case-insensitively, and the search term is expected to be an unqualified stereotype name. For more information about the returned columns, see query model_elements_stereotypes. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+	SELECT
+		p.ea_guid AS CLASSGUID,
+		'Package' AS CLASSTYPE,
+		NULL AS CLASSTABLE,
+		p.name AS package_name,
+		NULL AS classifier_name,
+		NULL AS property_name,
+		o.stereotype AS primary_unqualified_stereotype,
+		x.description AS stereotypes
+	FROM
+		(t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid)
+	LEFT JOIN t_xref x ON
+		o.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		p.package_id IN (#Branch#)
+	UNION ALL
+	SELECT
+		o.ea_guid,
+		o.object_type,
+		NULL,
+		p.name,
+		o.name,
+		NULL,
+		o.stereotype,
+		x.description
+	FROM
+		(t_object o
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id)
+	LEFT JOIN t_xref x ON
+		o.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	UNION ALL
+	SELECT
+		a.ea_guid,
+		'Attribute',
+		NULL,
+		p.name,
+		o.name,
+		a.name,
+		a.stereotype,
+		x.description
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		a.object_id = o.object_id)
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id)
+	LEFT JOIN t_xref x ON
+		a.ea_guid = x.client
+		AND x.name = 'Stereotypes'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+	UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		p_start.name,
+		o_start.name,
+		c.destrole,
+		c.deststereotype,
+		x.description
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	INNER JOIN t_package p_start ON
+		o_start.package_id = p_start.package_id
+	LEFT JOIN t_xref x
+		ON x.client = c.ea_guid
+		AND x.name = 'Stereotypes'
+		AND x.type = 'connectorDestEnd property'
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Source -> Destination', 'Bi-Directional'))
+	UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		p_end.name,
+		o_end.name,
+		c.sourcerole,
+		c.sourcestereotype,
+		x.description
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	INNER JOIN t_package p_end ON
+		o_end.package_id = p_end.package_id
+	LEFT JOIN t_xref x
+		ON x.client = c.ea_guid
+		AND x.name = 'Stereotypes'
+		AND x.type = 'connectorSrcEnd property'
+	WHERE
+		(((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
+	)
+WHERE
+	lower(primary_unqualified_stereotype) = lower('<Search Term>')
+	OR lower(stereotypes) GLOB lower('*;Name=<Search Term>;*')
+	OR lower(stereotypes) GLOB lower('*;FQName=[^:]*::<Search Term>;*')
+ORDER BY
+	package_name,
+	classifier_name,
+	property_name;
 
 ```
 
@@ -4412,7 +5286,7 @@ ORDER BY
 
 ## `model_elements_tagged_value`
 
- Finds all model elements with the given tagged value. The actual value is only displayed for tagged values that are not of the memo type. 
+ Finds all packages, classifiers, properties, enumeration literals and associations (including aggregations) with the given tagged value. The actual value is only displayed for tagged values that are not of the memo type. 
 
 ```sql
 SELECT
@@ -4532,6 +5406,34 @@ WHERE
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
 	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
+UNION ALL
+SELECT
+	c.ea_guid,
+	c.connector_type,
+	't_connector',
+	c.name,
+	NULL,
+	ct.value
+FROM
+	((t_connector c
+INNER JOIN t_object o_start ON
+	c.start_object_id = o_start.object_id)
+INNER JOIN t_object o_end ON
+	c.end_object_id = o_end.object_id
+INNER JOIN t_connectortag ct ON
+	c.connector_id = ct.elementid)
+WHERE
+	((o_start.package_id IN (#Branch#)
+		AND o_end.package_id IN (#Branch#)
+			AND c.connector_type IN ('Association', 'Aggregation'))
+		OR (o_start.package_id IN (#Branch#)
+			AND (c.connector_type = 'Association'
+				OR (c.connector_type = 'Aggregation'
+					AND c.subtype = 'Weak')))
+		OR (o_end.package_id IN (#Branch#)
+			AND c.connector_type = 'Aggregation'
+			AND c.subtype = 'Strong'))
+	AND ct.property = ('<Search Term>')
 ORDER BY
 	name,
 	namespace;
@@ -4540,7 +5442,7 @@ ORDER BY
 
 ## `model_elements_tagged_value_export`
 
- Finds all classifiers, properties, enumeration literals and connectors with the given tagged value. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
+ Finds all classifiers, properties, enumeration literals and associations (including aggregations) with the given tagged value. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
 
 ```sql
 SELECT
@@ -4715,7 +5617,209 @@ WHERE
 
 ```
 
+## `model_missing_or_superfluous_usages`
+
+ Returns the selected model, once per issue found, if any of the following is true: (1) it is not connected via a usage to all its model dependencies; (2) it is connected via a usage to a package that is not a model dependency. 
+
+```sql
+SELECT * FROM (
+	WITH RECURSIVE conceptual_schema_or_standard(package_ea_guid, package_id, name, stereotype) AS (
+	SELECT 
+		p.ea_guid,
+		p.package_id,
+		p.name,
+		o.stereotype
+	FROM
+		t_package p
+	INNER JOIN t_object o ON
+		p.ea_guid = o.ea_guid
+	WHERE
+		o.stereotype IN ('DKDomænemodel', 'AbstractSchema', 'ApplicationSchema')
+		OR (
+		 EXISTS (
+			SELECT
+				*
+			FROM
+				t_objectproperties op
+			WHERE
+				op.object_id = o.object_id
+				AND lower(op.property) = 'isapplicationsschema'
+				AND op.value = 'true')
+		)
+		OR (
+			EXISTS (
+				SELECT
+					*
+				FROM
+					t_objectproperties op
+				WHERE
+					op.object_id = o.object_id
+					AND op.property = 'name'
+					AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'number'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'yearVersion'
+						AND LENGTH(op.value) > 0)
+			AND EXISTS (
+					SELECT
+						*
+					FROM
+						t_objectproperties op
+					WHERE
+						op.object_id = o.object_id
+						AND op.property = 'publicationDate'
+						AND LENGTH(op.value) > 0)
+		)
+	), attribute_type(type_id, type_name, type_package_id) AS (
+		SELECT DISTINCT
+			t.object_id,
+			t.name,
+			t.package_id
+		FROM
+			t_object o
+		INNER JOIN t_attribute a ON
+			o.object_id = a.object_id
+		INNER JOIN t_object t ON
+			a.classifier = t.object_id
+		WHERE
+			o.package_id IN (#Branch#)
+			AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+			AND instr(a.styleex, 'IsLiteral=1') = 0
+			AND t.package_id <> o.package_id
+	), attribute_type_package_info(type_id, type_name, package_ea_guid, package_id, package_name, parent_id, level) AS (
+		SELECT
+			attribute_type.type_id,
+			attribute_type.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			1
+		FROM
+			attribute_type
+		INNER JOIN t_package p
+			ON attribute_type.type_package_id = p.package_id
+	UNION ALL
+		SELECT
+			atpi.type_id,
+			atpi.type_name,
+			p.ea_guid,
+			p.package_id,
+			p.name,
+			p.parent_id,
+			atpi.level * 2
+		FROM
+			attribute_type_package_info atpi
+			INNER JOIN t_package p ON
+				atpi.parent_id = p.package_id
+		WHERE atpi.package_id NOT IN (SELECT package_id FROM conceptual_schema_or_standard)
+	), attribute_type_conceptual_schema_or_standard_info(type_id, type_name, package_ea_guid, package_id, package_name) AS (
+		SELECT
+			type_id,
+			type_name,
+			package_ea_guid,
+			package_id,
+			package_name
+		FROM
+			attribute_type_package_info atpi
+		WHERE level = (
+				SELECT max(level)
+				FROM attribute_type_package_info AS atpi2
+				WHERE atpi2.type_id = atpi.type_id
+			)
+	), model_dependencies(package_ea_guid, package_id, package_name) AS (
+	SELECT DISTINCT
+		package_ea_guid,
+		package_id,
+		package_name
+	FROM
+		attribute_type_conceptual_schema_or_standard_info
+	)
+	SELECT
+		p.ea_guid AS CLASSGUID,
+		'Package' AS CLASSTYPE,
+		p.name,
+		#Concat 'The model is not connected via a usage to model dependency "', md.package_name, '"'# AS info
+	FROM
+		t_package p,
+		model_dependencies md
+	WHERE
+		p.package_id = #Package#
+		AND NOT EXISTS (
+		SELECT
+			*
+		FROM
+			t_connector c
+		INNER JOIN t_object o ON
+			(c.start_object_id = o.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.end_object_id = o.object_id
+			AND c.direction = 'Destination -> Source')
+		INNER JOIN t_package p1 ON
+			o.ea_guid = p1.ea_guid
+		INNER JOIN t_object o2 ON
+			(c.end_object_id = o2.object_id
+			AND c.direction = 'Source -> Destination')
+			OR (c.start_object_id = o2.object_id
+			AND c.direction = 'Destination -> Source')
+		WHERE
+			c.connector_type = 'Usage'
+			AND p1.package_id = #Package#
+			AND o2.ea_guid = md.package_ea_guid
+	)
+	UNION ALL
+	SELECT
+		p.ea_guid,
+		'Package',
+		p.name,
+		#Concat 'The model is connected via a usage to "', p2.name, '" but "', p2.name, '" is not a model dependency'#
+	FROM
+		t_package p,
+		(t_connector c
+	INNER JOIN t_object o ON
+		(c.start_object_id = o.object_id
+		AND c.direction = 'Source -> Destination')
+		OR (c.end_object_id = o.object_id
+		AND c.direction = 'Destination -> Source'))
+	INNER JOIN t_package p1 ON
+		o.ea_guid = p1.ea_guid
+	INNER JOIN t_object o2 ON
+		(c.end_object_id = o2.object_id
+		AND c.direction = 'Source -> Destination')
+		OR (c.start_object_id = o2.object_id
+		AND c.direction = 'Destination -> Source')
+	INNER JOIN t_package p2 ON
+		o2.ea_guid = p2.ea_guid
+	WHERE
+		p.package_id = #Package#
+		AND c.connector_type = 'Usage'
+		AND p1.package_id = #Package#
+		AND p2.ea_guid NOT IN (
+			SELECT
+				package_ea_guid
+			FROM
+				model_dependencies)
+);
+
+```
+
 ## `model_without_dependency_diagram`
+
+ Returns the selected package if it does not contain a dependency diagram. 
 
 ```sql
 SELECT
@@ -4736,6 +5840,7 @@ WHERE
 		AND d.Diagram_Type = 'Package'
 		AND d.name = #Concat '<Search Term> ',p.name#
 	);
+
 ```
 
 ## `multivalued_attributes`
