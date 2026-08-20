@@ -420,6 +420,61 @@ ORDER BY
 
 ```
 
+## `attributes_without_tagged_value`
+
+ Finds attributes (not enumeration literals) that do not have the tag given in the search term or where that tag is blank. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>')
+	SELECT
+		a.ea_guid AS CLASSGUID,
+		'Attribute' AS CLASSTYPE,
+		a.name AS name,
+		o.name AS namespace,
+		tv1.tagvalue AS "<Search Term>"
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+	INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+	LEFT JOIN attribute_tagged_values tv1 ON
+		a.id = tv1.attribute_id
+		AND tv1.tagname = '<Search Term>'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+		AND a.styleex NOT LIKE '%IsLiteral=1%'
+)
+WHERE
+	"<Search Term>" IS NULL
+	OR length(trim("<Search Term>")) = 0
+;
+
+```
+
 ## `attributes_without_type`
 
  Find the attributes that have no type specified (<none> was chosen as type in the drop-down). 
@@ -750,6 +805,107 @@ ORDER BY
 
 ```
 
+## `classifiers_with_associations_ends_without_tagged_value`
+
+ Finds all classifiers that have an association end with stereotype DKEgenskab that does not have the tag given in the search term or where that tag is blank. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1)
+	SELECT
+		o_start.ea_guid AS CLASSGUID,
+		o_start.object_type AS CLASSTYPE,
+		o_start.name AS classifier_name,
+		c.destrole AS property_name,
+		tv1.tagvalue AS "<Search Term>"
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_TARGET'
+		AND tv1.tagname = '<Search Term>'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.deststereotype = 'DKEgenskab'
+UNION ALL
+	SELECT
+		o_end.ea_guid,
+		o_end.object_type,
+		o_end.name,
+		c.sourcerole,
+		tv1.tagvalue
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv1.tagname = '<Search Term>'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+		AND c.sourcestereotype = 'DKEgenskab'
+)
+WHERE
+	"<Search Term>" IS NULL
+	OR length(trim("<Search Term>")) = 0
+;
+
+```
+
 ## `classifiers_with_associations_or_association_ends_with_duplicate_tags`
 
  Find the classifiers with association ends and relationships that have more than one tagged value with the same name. Model views cannot show connectors or connector ends, this query can be used in a model view search folder. See also query model_elements_duplicate_tags. 
@@ -985,6 +1141,58 @@ WHERE
 			AND c.subtype = 'Strong'))
 	AND c.direction IN ('Destination -> Source', 'Bi-Directional'))
 	AND c.sourcecard IS NULL;
+
+```
+
+## `classifiers_without_tagged_value`
+
+ Finds all classifiers that do not have the tag given in the search term or where that tag is blank. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '<memo>'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '<memo>')
+	SELECT
+		o.ea_guid AS CLASSGUID,
+		o.object_type AS CLASSTYPE,
+		o.name AS name,
+		p.name AS namespace,
+		tv1.tagvalue AS "<Search Term>"
+	FROM
+		t_object o
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id
+	LEFT JOIN object_tagged_values tv1 ON
+		o.object_id = tv1.object_id
+		AND tv1.tagname = '<Search Term>'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+)
+WHERE
+	"<Search Term>" IS NULL
+	OR length(trim("<Search Term>")) = 0
+;
 
 ```
 
@@ -2783,6 +2991,61 @@ ORDER BY
 	package_name,
 	classifier_name,
 	enumeration_literal_name;
+
+```
+
+## `enumeration_literals_without_tagged_value`
+
+ Finds enumeration literals that do not have the tag given in the search term or where that tag is blank. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>')
+	SELECT
+		a.ea_guid AS CLASSGUID,
+		'Attribute' AS CLASSTYPE,
+		a.name AS name,
+		o.name AS namespace,
+		tv1.tagvalue AS "<Search Term>"
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+	INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+	LEFT JOIN attribute_tagged_values tv1 ON
+		a.id = tv1.attribute_id
+		AND tv1.tagname = '<Search Term>'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+		AND a.styleex LIKE '%IsLiteral=1%'
+)
+WHERE
+	"<Search Term>" IS NULL
+	OR length(trim("<Search Term>")) = 0
+;
 
 ```
 
@@ -4697,6 +4960,472 @@ WHERE
 
 ```
 
+## `model_elements_semantic_tagged_values_iso_19103`
+
+ Finds all classifiers, properties and enumeration literals with their definition, description, designation and IRI tagged values. 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '<memo>'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '<memo>'),
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>'),
+associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1)
+	SELECT
+		o.ea_guid AS CLASSGUID,
+		o.object_type AS CLASSTYPE,
+		NULL AS CLASSTABLE,
+		o.name AS name,
+		p.name AS namespace,
+		tv1.tagvalue AS designation,
+		tv2.tagvalue AS definition,
+		tv3.tagvalue AS description,
+		tv4.tagvalue AS iri
+	FROM
+		t_object o
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id
+	LEFT JOIN object_tagged_values tv1 ON
+		o.object_id = tv1.object_id
+		AND tv1.tagname = 'designation'
+	LEFT JOIN object_tagged_values tv2 ON
+		o.object_id = tv2.object_id
+		AND tv2.tagname = 'definition'
+	LEFT JOIN object_tagged_values tv3 ON
+		o.object_id = tv3.object_id
+		AND tv3.tagname = 'description'
+	LEFT JOIN object_tagged_values tv4 ON
+		o.object_id = tv4.object_id
+		AND tv4.tagname = 'IRI'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+UNION ALL
+	SELECT
+		a.ea_guid,
+		'Attribute',
+		NULL,
+		a.name,
+		o.name,
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+	INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+	LEFT JOIN attribute_tagged_values tv1 ON
+		a.id = tv1.attribute_id
+		AND tv1.tagname = 'designation'
+	LEFT JOIN attribute_tagged_values tv2 ON
+		a.id = tv2.attribute_id
+		AND tv2.tagname = 'definition'
+	LEFT JOIN attribute_tagged_values tv3 ON
+		a.id = tv3.attribute_id
+		AND tv3.tagname = 'description'
+	LEFT JOIN attribute_tagged_values tv4 ON
+		a.id = tv4.attribute_id
+		AND tv4.tagname = 'IRI'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		c.destrole,
+		o_start.name,
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_TARGET'
+		AND tv1.tagname = 'designation'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		tv2.connector_guid = c.ea_guid
+		AND tv2.baseclass = 'ASSOCIATION_TARGET'
+		AND tv2.tagname = 'definition'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		tv3.connector_guid = c.ea_guid
+		AND tv3.baseclass = 'ASSOCIATION_TARGET'
+		AND tv3.tagname = 'description'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		tv4.connector_guid = c.ea_guid
+		AND tv4.baseclass = 'ASSOCIATION_TARGET'
+		AND tv4.tagname = 'IRI'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+UNION ALL
+	SELECT
+		c.ea_guid,
+		'AssociationEnd',
+		't_connector',
+		c.sourcerole,
+		o_end.name,
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv1.tagname = 'designation'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		tv2.connector_guid = c.ea_guid
+		AND tv2.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv2.tagname = 'definition'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		tv3.connector_guid = c.ea_guid
+		AND tv3.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv3.tagname = 'description'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		tv4.connector_guid = c.ea_guid
+		AND tv4.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv4.tagname = 'IRI'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+);
+
+```
+
+## `model_elements_semantic_tagged_values_iso_19103_export`
+
+ Finds all classifiers, properties and enumeration literals with their definition, description, designation and IRI tagged values. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
+
+```sql
+SELECT
+	*
+FROM
+	(
+WITH
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '<memo>'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '<memo>'),
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>'),
+associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1)
+	SELECT
+		o.ea_guid AS CLASSGUID,
+		o.ea_guid AS GUID,
+		o.name AS "UML-NAVN",
+		p.name AS NAMESPACE,
+		o.object_type AS CLASSTYPE,
+		CASE
+			WHEN o.object_type = 'DataType' THEN 'DATA_TYPE'
+			ELSE upper(o.object_type)
+		END AS "TYPE",
+		NULL AS CLASSTABLE,
+		tv1.tagvalue AS designation,
+		tv2.tagvalue AS definition,
+		tv3.tagvalue AS description,
+		tv4.tagvalue AS iri
+	FROM
+		t_object o
+	INNER JOIN t_package p ON
+		o.package_id = p.package_id
+	LEFT JOIN object_tagged_values tv1 ON
+		o.object_id = tv1.object_id
+		AND tv1.tagname = 'designation'
+	LEFT JOIN object_tagged_values tv2 ON
+		o.object_id = tv2.object_id
+		AND tv2.tagname = 'definition'
+	LEFT JOIN object_tagged_values tv3 ON
+		o.object_id = tv3.object_id
+		AND tv3.tagname = 'description'
+	LEFT JOIN object_tagged_values tv4 ON
+		o.object_id = tv4.object_id
+		AND tv4.tagname = 'IRI'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+UNION ALL
+	SELECT
+		a.ea_guid,
+		a.ea_guid,
+		a.name,
+		o.name,
+		'Attribute',
+		CASE
+			WHEN a.styleex LIKE '%IsLiteral=1%' THEN 'ENUMERATION_LITERAL'
+			ELSE 'ATTRIBUTE'
+		END,
+		NULL,
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_attribute a
+	INNER JOIN t_object o ON
+		o.object_id = a.object_id)
+	INNER JOIN t_package p ON
+		p.package_id = o.package_id)
+	LEFT JOIN attribute_tagged_values tv1 ON
+		a.id = tv1.attribute_id
+		AND tv1.tagname = 'designation'
+	LEFT JOIN attribute_tagged_values tv2 ON
+		a.id = tv2.attribute_id
+		AND tv2.tagname = 'definition'
+	LEFT JOIN attribute_tagged_values tv3 ON
+		a.id = tv3.attribute_id
+		AND tv3.tagname = 'description'
+	LEFT JOIN attribute_tagged_values tv4 ON
+		a.id = tv4.attribute_id
+		AND tv4.tagname = 'IRI'
+	WHERE
+		o.package_id IN (#Branch#)
+		AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
+UNION ALL
+	SELECT
+		c.ea_guid,
+		-- substr is 1-based
+		'{dst' || substr(c.ea_guid, 4),
+		c.destrole,
+		o_start.name,
+		'AssociationEnd',
+		'ASSOCIATION_END',
+		't_connector',
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_TARGET'
+		AND tv1.tagname = 'designation'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		tv2.connector_guid = c.ea_guid
+		AND tv2.baseclass = 'ASSOCIATION_TARGET'
+		AND tv2.tagname = 'definition'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		tv3.connector_guid = c.ea_guid
+		AND tv3.baseclass = 'ASSOCIATION_TARGET'
+		AND tv3.tagname = 'description'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		tv4.connector_guid = c.ea_guid
+		AND tv4.baseclass = 'ASSOCIATION_TARGET'
+		AND tv4.tagname = 'IRI'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+UNION ALL
+	SELECT
+		c.ea_guid,
+		-- substr is 1-based
+		'{src' || substr(c.ea_guid, 4),
+		c.sourcerole,
+		o_end.name,
+		'AssociationEnd',
+		'ASSOCIATION_END',
+		't_connector',
+		tv1.tagvalue,
+		tv2.tagvalue,
+		tv3.tagvalue,
+		tv4.tagvalue
+	FROM
+		((t_connector c
+	INNER JOIN t_object o_start ON
+		c.start_object_id = o_start.object_id)
+	INNER JOIN t_object o_end ON
+		c.end_object_id = o_end.object_id)
+	LEFT JOIN associationend_tagged_values tv1 ON
+		tv1.connector_guid = c.ea_guid
+		AND tv1.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv1.tagname = 'designation'
+	LEFT JOIN associationend_tagged_values tv2 ON
+		tv2.connector_guid = c.ea_guid
+		AND tv2.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv2.tagname = 'definition'
+	LEFT JOIN associationend_tagged_values tv3 ON
+		tv3.connector_guid = c.ea_guid
+		AND tv3.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv3.tagname = 'description'
+	LEFT JOIN associationend_tagged_values tv4 ON
+		tv4.connector_guid = c.ea_guid
+		AND tv4.baseclass = 'ASSOCIATION_SOURCE'
+		AND tv4.tagname = 'IRI'
+	WHERE
+		((o_start.package_id IN (#Branch#)
+			AND o_end.package_id IN (#Branch#)
+				AND c.connector_type IN ('Association', 'Aggregation'))
+			OR (o_start.package_id IN (#Branch#)
+				AND (c.connector_type = 'Association'
+					OR (c.connector_type = 'Aggregation'
+						AND c.subtype = 'Weak')))
+			OR (o_end.package_id IN (#Branch#)
+				AND c.connector_type = 'Aggregation'
+				AND c.subtype = 'Strong'))
+);
+
+```
+
 ## `model_elements_stereotype_basicdata1`
 
  Show the model elements with a stereotype that is defined in the Basic Data 1 profile. See also query stereotypes. 
@@ -5286,28 +6015,113 @@ ORDER BY
 
 ## `model_elements_tagged_value`
 
- Finds all packages, classifiers, properties, enumeration literals and associations (including aggregations) with the given tagged value. The actual value is only displayed for tagged values that are not of the memo type. 
+ Finds all packages, classifiers, properties, enumeration literals and associations (including aggregations) with the given tagged value. 
 
 ```sql
+SELECT
+	*
+FROM
+	(
+WITH
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '<memo>'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '<memo>'),
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>'),
+associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1),
+connector_tagged_values(connector_id, tagname, tagvalue) AS (
+    SELECT
+        ct.elementid,
+        ct.property,
+        ct.value
+    FROM
+        t_connectortag ct
+    WHERE
+        ct.value != '<memo>'
+UNION ALL
+    SELECT
+        ct.elementid,
+        ct.property,
+        ct.notes
+    FROM
+        t_connectortag ct
+    WHERE
+        ct.value = '<memo>')
 SELECT
 	o.ea_guid AS CLASSGUID,
 	o.object_type AS CLASSTYPE,
 	NULL AS CLASSTABLE,
 	o.name AS name,
 	pp.name AS namespace,
-	op.value AS "<Search Term>"
+	tv.tagvalue AS "<Search Term>"
 FROM
 	t_object o
-INNER JOIN t_objectproperties op ON
-	op.object_id = o.object_id
 INNER JOIN t_package p ON
 	p.ea_guid = o.ea_guid
 INNER JOIN t_package pp ON
 	p.parent_id = pp.package_id
+INNER JOIN object_tagged_values tv ON
+    o.object_id = tv.object_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	p.package_id IN (#Branch#)
 	AND o.object_type IN ('Package')
-	AND op.property = ('<Search Term>')
 UNION ALL
 SELECT
 	o.ea_guid,
@@ -5315,17 +6129,17 @@ SELECT
 	NULL,
 	o.name,
 	p.name,
-	op.value
+	tv.tagvalue
 FROM
 	t_object o
-INNER JOIN t_objectproperties op ON
-	op.object_id = o.object_id
 INNER JOIN t_package p ON
 	o.package_id = p.package_id
+INNER JOIN object_tagged_values tv ON
+    o.object_id = tv.object_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
-	AND op.property = ('<Search Term>')
 UNION ALL
 SELECT
 	a.ea_guid,
@@ -5333,16 +6147,16 @@ SELECT
 	NULL,
 	a.name,
 	o.name,
-	at.value
+	tv.tagvalue
 FROM
-	((t_attribute a
+	t_attribute a
 INNER JOIN t_object o ON
-	o.object_id = a.object_id)
+	o.object_id = a.object_id
 INNER JOIN t_package p ON
-	p.package_id = o.package_id)
-INNER JOIN t_attributetag AT ON
-	(a.id = at.elementid
-		AND at.property = '<Search Term>')
+	p.package_id = o.package_id
+INNER JOIN attribute_tagged_values tv ON
+    a.id = tv.attribute_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -5353,17 +6167,17 @@ SELECT
 	't_connector',
 	c.destrole,
 	o_start.name,
-	tv.notes
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
-INNER JOIN t_taggedvalue tv ON
-	(tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = '<Search Term>')
+	c.end_object_id = o_end.object_id
+INNER JOIN associationend_tagged_values tv ON
+    tv.connector_guid = c.ea_guid
+    AND tv.baseclass = 'ASSOCIATION_TARGET'
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5383,17 +6197,17 @@ SELECT
 	't_connector',
 	c.sourcerole,
 	o_end.name,
-	tv.notes
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
-INNER JOIN t_taggedvalue tv ON
-	(tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = '<Search Term>')
+	c.end_object_id = o_end.object_id
+INNER JOIN associationend_tagged_values tv ON
+    tv.connector_guid = c.ea_guid
+    AND tv.baseclass = 'ASSOCIATION_SOURCE'
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5413,15 +6227,16 @@ SELECT
 	't_connector',
 	c.name,
 	NULL,
-	ct.value
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
 	c.end_object_id = o_end.object_id
-INNER JOIN t_connectortag ct ON
-	c.connector_id = ct.elementid)
+INNER JOIN connector_tagged_values tv ON
+    tv.connector_id = c.connector_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5433,7 +6248,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
-	AND ct.property = ('<Search Term>')
+)
 ORDER BY
 	name,
 	namespace;
@@ -5445,6 +6260,91 @@ ORDER BY
  Finds all classifiers, properties, enumeration literals and associations (including aggregations) with the given tagged value. The output of this query is the starting point for a CSV file to import with script import-data-model-custom-tags (EA Modelling Tools JavaScript): (1) use the "Copy Selected to Clipboard" functionality (see https://sparxsystems.com/eahelp/model_search_context_menu.html), (2) paste in LibreOffice Calc (use semicolon as separator, check "Trim spaces", keep the proposed character set, UTF-16), (3) modify the tagged values as needed and (4) save as a CSV file (use UTF-8 as character set, comma (,) as field delimiter and quotation mark (") as string delimiter). 
 
 ```sql
+SELECT
+	*
+FROM
+	(
+WITH
+object_tagged_values(object_id, tagname, tagvalue) AS (
+	SELECT
+		op.object_id,
+		op.property,
+		op.value
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value != '<memo>'
+UNION ALL
+	SELECT
+		op.object_id,
+		op.property,
+		op.notes
+	FROM
+		t_objectproperties op
+	WHERE
+		op.value = '<memo>'),
+attribute_tagged_values(attribute_id, tagname, tagvalue) AS (
+	SELECT
+		at.elementid,
+		at.property,
+		at.value
+	FROM
+		t_attributetag at
+	WHERE
+		at.value != '<memo>'
+UNION ALL
+	SELECT
+		at.elementid,
+		at.property,
+		at.notes
+	FROM
+		t_attributetag at
+	WHERE
+		at.value = '<memo>'),
+associationend_tagged_values(connector_guid, baseclass, tagname, tagvalue) AS (
+	SELECT
+		tv.elementid,
+		tv.baseclass,
+		tv.tagvalue,
+		CASE
+			WHEN instr(tv.notes, '$ea_notes=') = 0
+	THEN tv.notes
+			ELSE substr(tv.notes, 1, instr(tv.notes, '$ea_notes=') - 1)
+		END
+	FROM
+		t_taggedvalue tv
+	WHERE
+		tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+			AND instr(tv.notes, '<memo>$ea_notes=') = 0
+	UNION ALL
+		SELECT
+			tv.elementid,
+			tv.baseclass,
+			tv.tagvalue,
+			substr(tv.notes, 17)
+		FROM
+			t_taggedvalue tv
+		WHERE
+			tv.baseclass IN ('ASSOCIATION_SOURCE', 'ASSOCIATION_TARGET')
+				AND instr(tv.notes, '<memo>$ea_notes=') = 1),
+connector_tagged_values(connector_id, tagname, tagvalue) AS (
+    SELECT
+        ct.elementid,
+        ct.property,
+        ct.value
+    FROM
+        t_connectortag ct
+    WHERE
+        ct.value != '<memo>'
+UNION ALL
+    SELECT
+        ct.elementid,
+        ct.property,
+        ct.notes
+    FROM
+        t_connectortag ct
+    WHERE
+        ct.value = '<memo>')
 SELECT
 	-- for display in EA
 	o.ea_guid AS CLASSGUID,
@@ -5464,18 +6364,14 @@ SELECT
 	-- for display in EA
 	NULL AS CLASSTABLE,
 	-- for import of tags via script import-data-model-custom-tags
-	(
-	SELECT
-		op.value
-	FROM
-		t_objectproperties op
-	WHERE
-		op.object_id = o.object_id
-		AND op.property = ('<Search Term>')) AS "<Search Term>"
+	tv.tagvalue AS "<Search Term>"
 FROM
 	t_object o
 INNER JOIN t_package p ON
 	o.package_id = p.package_id
+LEFT JOIN object_tagged_values tv ON
+    o.object_id = tv.object_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -5491,20 +6387,16 @@ SELECT
 		ELSE 'ATTRIBUTE'
 	END,
 	NULL,
-	(
-	SELECT
-		at.value
-	FROM
-		t_attributetag AT
-	WHERE
-		a.id = at.elementid
-		AND at.property = ('<Search Term>'))
+	tv.tagvalue
 FROM
-	((t_attribute a
+	t_attribute a
 INNER JOIN t_object o ON
-	o.object_id = a.object_id)
+	o.object_id = a.object_id
 INNER JOIN t_package p ON
-	p.package_id = o.package_id)
+	p.package_id = o.package_id
+LEFT JOIN attribute_tagged_values tv ON
+    a.id = tv.attribute_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	o.package_id IN (#Branch#)
 	AND o.object_type IN ('Class', 'DataType', 'Enumeration', 'Interface')
@@ -5518,21 +6410,17 @@ SELECT
 	'AssociationEnd',
 	'ASSOCIATION_END',
 	't_connector',
-	(
-	SELECT
-		tv.notes
-	FROM
-		t_taggedvalue tv
-	WHERE
-		tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_TARGET'
-		AND tv.tagvalue = ('<Search Term>'))
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
+	c.end_object_id = o_end.object_id
+LEFT JOIN associationend_tagged_values tv ON
+    tv.connector_guid = c.ea_guid
+    AND tv.baseclass = 'ASSOCIATION_TARGET'
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5544,6 +6432,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
+	AND c.direction IN ('Source -> Destination', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -5554,21 +6443,17 @@ SELECT
 	'AssociationEnd',
 	'ASSOCIATION_END',
 	't_connector',
-	(
-	SELECT
-		tv.notes
-	FROM
-		t_taggedvalue tv
-	WHERE
-		tv.elementid = c.ea_guid
-		AND tv.baseclass = 'ASSOCIATION_SOURCE'
-		AND tv.tagvalue = ('<Search Term>'))
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
+	c.end_object_id = o_end.object_id
+LEFT JOIN associationend_tagged_values tv ON
+    tv.connector_guid = c.ea_guid
+    AND tv.baseclass = 'ASSOCIATION_SOURCE'
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5580,6 +6465,7 @@ WHERE
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
 			AND c.subtype = 'Strong'))
+	AND c.direction IN ('Destination -> Source', 'Bi-Directional')
 UNION ALL
 SELECT
 	c.ea_guid,
@@ -5589,20 +6475,16 @@ SELECT
 	c.connector_type,
 	'ASSOCIATION',
 	't_connector',
-	(
-	SELECT
-		ct.value
-	FROM
-		t_connectortag ct
-	WHERE
-		ct.elementid = c.connector_id
-		AND ct.property = ('<Search Term>'))
+	tv.tagvalue
 FROM
-	((t_connector c
+	t_connector c
 INNER JOIN t_object o_start ON
-	c.start_object_id = o_start.object_id)
+	c.start_object_id = o_start.object_id
 INNER JOIN t_object o_end ON
-	c.end_object_id = o_end.object_id)
+	c.end_object_id = o_end.object_id
+LEFT JOIN connector_tagged_values tv ON
+    tv.connector_id = c.connector_id
+    AND tv.tagname = '<Search Term>'
 WHERE
 	((o_start.package_id IN (#Branch#)
 		AND o_end.package_id IN (#Branch#)
@@ -5613,7 +6495,8 @@ WHERE
 					AND c.subtype = 'Weak')))
 		OR (o_end.package_id IN (#Branch#)
 			AND c.connector_type = 'Aggregation'
-			AND c.subtype = 'Strong'));
+			AND c.subtype = 'Strong'))
+);
 
 ```
 

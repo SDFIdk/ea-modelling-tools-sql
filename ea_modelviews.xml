@@ -49,5 +49,19 @@
             <Search SrchID="{CE1FB2AF-49E3-4402-A446-844A105B6ADB}" SrchTerm="" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="diagrams with invalid names (English)" ID="{930D9D7B-6E46-41e8-9883-9A0A8F4C775E}" Pos="0"/>
             <Search SrchID="{E8B2F87E-BE46-44a9-906B-4AC533900454}" SrchTerm="Package dependencies" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="model without dependency diagram (English)" ID="{AD8C7020-300B-4f2b-8A00-3EB69FBFA6DE}" Pos="0"/>
         </Category>
+        <Category NType="7" Name="Documentation rules for models in Danish" ID="{37D3CC44-7ACA-42b1-A20C-78C7CA3CAD9B}" Pos="0">
+            <Search SrchID="{A6AA5E15-7C96-40cd-B19D-B866C3EBC090}" SrchTerm="definition (da)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="attributes without definition (Danish)" ID="{D8660BF0-0D14-435c-9107-56BF866C4376}" Pos="0"/>
+            <Search SrchID="{F4F63DD4-F3FD-4329-A293-DAEED39DF080}" SrchTerm="definition (da)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers with stereotyped association ends without definition (Danish)" ID="{7756AEF0-2D37-4713-A1ED-3A50A02311E9}" Pos="0"/>
+            <Search SrchID="{FE3EFF82-260A-4489-A922-5256737CA888}" SrchTerm="definition (da)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers without definition (Danish)" ID="{4924507B-AB41-4d9d-836D-521CDE587907}" Pos="0"/>
+            <Search SrchID="{61A8404F-6470-4a1a-8593-D87ECA950666}" SrchTerm="definition (da)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="enumeration literals without definition (Danish)" ID="{6E78D97C-F108-47d1-9848-C57F0BBA552B}" Pos="0"/>
+            <Search SrchID="{61A8404F-6470-4a1a-8593-D87ECA950666}" SrchTerm="prefLabel (da)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="enumeration literals without preferred label (Danish)" ID="{AC97395F-778A-40b9-BA9B-99E6FC8F2B65}" Pos="0"/>
+        </Category>
+        <Category NType="7" Name="Documentation rules for models in English" ID="{8C28464D-1DDA-49cd-A1EC-B81F1C147573}" Pos="0">
+            <Search SrchID="{A6AA5E15-7C96-40cd-B19D-B866C3EBC090}" SrchTerm="definition (en)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="attributes without definition (English)" ID="{FB9539FE-2518-4843-AF2C-09A7B9468F75}" Pos="0"/>
+            <Search SrchID="{F4F63DD4-F3FD-4329-A293-DAEED39DF080}" SrchTerm="definition (en)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers with stereotyped association ends without definition (English)" ID="{EDD4052D-288F-4f0d-9D0D-5907DBE1A1E8}" Pos="0"/>
+            <Search SrchID="{FE3EFF82-260A-4489-A922-5256737CA888}" SrchTerm="definition (en)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="classifiers without definition (English)" ID="{72DE2BAB-94C5-4c6b-9042-661F1D999472}" Pos="0"/>
+            <Search SrchID="{61A8404F-6470-4a1a-8593-D87ECA950666}" SrchTerm="definition (en)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="enumeration literals without definition (English)" ID="{0774474F-107A-4c52-9953-C7EF6D65FD8A}" Pos="0"/>
+            <Search SrchID="{61A8404F-6470-4a1a-8593-D87ECA950666}" SrchTerm="prefLabel (en)" AutoRefresh="0" Notify="0" RefreshSeconds="0" NType="9" Name="enumeration literals without preferred label (English)" ID="{239ED0C6-6FEF-4cb7-BE22-BDA9D208FC58}" Pos="0"/>
+        </Category>
     </RootView>
 </Views>
